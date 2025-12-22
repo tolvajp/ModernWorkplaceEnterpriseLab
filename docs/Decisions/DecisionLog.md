@@ -19,6 +19,9 @@ The decision folders are the **source of truth**.
 
 | ID       | Topic                                   | Status   | Date       | Owner        |
 |----------|-----------------------------------------|----------|------------|--------------|
+| DEC-0000 | Endpoint management platform selection (Microsoft Intune) | Accepted | 2025-12-22 | Peter Tolvaj |
+| DEC-0001 | Licensing baseline selection (Microsoft 365 E5) | Accepted | 2025-12-22 | Peter Tolvaj |
+
 
 
 
