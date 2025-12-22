@@ -31,12 +31,13 @@ The lab is intentionally designed to be **readable without prior context**: star
         ├── DecisionLog.md
         ├── DEC-XXXX/
         │   ├── DEC-XXXX.md
-        │   ├── RNB-XXXX.md
-        │   ├── RNB-XXXX.json        (optional)
+        │   ├── RNB-XXXX.md          (when applicable)
+        │   ├── RNB-XXXX.json        (when applicable)
         │   ├── SCR-XXXX.ps1         (optional)
         └── DEC-TEMP/
             ├── DEC-TEMP.md
             ├── RNB-TEMP.md
+            ├── SCR-TEMP.md
 
 ```
 
@@ -72,6 +73,14 @@ The lab is intentionally designed to be **readable without prior context**: star
 
 - **DEC-TEMP/**  
   Templates for creating new decision packages.
+
+Not every decision results in executable actions.
+
+Some decisions define architectural or conceptual models and therefore do not
+require a runbook or script.
+
+Runbooks (RNB) and scripts (SCR) are created only when a decision introduces
+concrete, repeatable operational steps.
 
 ## Disclaimer
 This is a **personal, non-production lab** for learning, demonstration, and portfolio purposes.  
