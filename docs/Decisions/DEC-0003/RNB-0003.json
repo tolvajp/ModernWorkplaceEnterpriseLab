@@ -1,0 +1,19 @@
+{
+  "Auth": {
+    "Scopes": [
+      "Domain.ReadWrite.All",
+      "Organization.ReadWrite.All",
+      "OrganizationalBranding.ReadWrite.All"
+    ]
+  },
+  "CustomDomain": {
+    "DomainName": "modernworkplaceenterpriselab.eu",
+    "MakePrimaryDomain": true
+  },
+  "CompanyBranding": {
+    "SignInPageText": "Modern Workplace Enterprise Lab (MWE Lab)",
+    "BannerLogoPath": "artifacts\\images\\branding-bannerlogo-280x60.png",
+    "SquareLogoPath": "artifacts\\images\\branding-squarelogo-240x240.png",
+    "SignInBackgroundImagePath": "artifacts\\images\\branding-signin-background-1920x1080.png"
+  }
+}
