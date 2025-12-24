@@ -1,0 +1,8 @@
+{
+  "Auth": {
+    "Scopes": [
+      "Domain.ReadWrite.All",
+      "Organization.ReadWrite.All"
+    ]
+  }
+}

@@ -15,6 +15,7 @@ if (Test-Path -LiteralPath $configPath) {
             $expected=@($config.Auth.Scopes)
             $factual=@((Get-MgContext).Scopes | Where-Object { $_ -match '\.' })
             $missing = (Compare-Object -ReferenceObject $expected -DifferenceObject $factual | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject })
+
             if ($missing) {
                 Disconnect-MgGraph
                 Connect-MgGraph -Scopes ($factual + $missing) 
@@ -27,3 +28,20 @@ if (Test-Path -LiteralPath $configPath) {
 }else {
     Write-Host "Config file not found: $configPath"
 }
+
+
+$domainName = $config.CustomDomain.DomainName
+
+# --- Execution ---
+New-MgDomain -Id $domainName | Out-Null
+
+$dnsRecord = Get-MgDomainVerificationDnsRecord -DomainId $domainName -All |
+    Where-Object { $_.RecordType -eq 'Txt' } |
+    Select-Object -First 1
+
+Write-Host ""
+Write-Host "=== DNS VERIFICATION REQUIRED ==="
+Write-Host "Type : TXT"
+Write-Host "Name : @"
+Write-Host "Value: $($dnsRecord.AdditionalProperties.text)"
+Write-Host "TTL  : $($dnsRecord.Ttl)"

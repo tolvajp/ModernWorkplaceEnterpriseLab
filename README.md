@@ -34,6 +34,7 @@ The lab is intentionally designed to be **readable without prior context**: star
         │   ├── RNB-XXXX.md          (when applicable)
         │   ├── RNB-XXXX.json        (when applicable)
         │   ├── SCR-XXXX.ps1         (optional)
+        │   └── artifacts/           (optional)
         └── DEC-TEMP/
             ├── DEC-TEMP.md
             ├── RNB-TEMP.md
@@ -68,7 +69,7 @@ The lab is intentionally designed to be **readable without prior context**: star
   - `DEC-XXXX.md` — rationale (**WHY**)
   - `RNB-XXXX.md` — execution steps / validation (**HOW**)
   - `RNB-XXXX.json` — optional parameter pack / desired-state input (**DATA**)
-  - `SCR-XXXX.ps1` — optional automation script (**WITH WHAT**)
+  - `SCR-XXXX.ps1` — optional automation script (**WITH WHAT**) In several parts If reasonable
   - `APP-XXXX.md` — optional parameter reasoning (**WHY**)
 
 - **DEC-TEMP/**  
