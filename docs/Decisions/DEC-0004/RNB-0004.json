@@ -1,0 +1,22 @@
+{
+  "LicenseGroups": [
+    { "Name": "NWE-LIC-M365E5", "Description": "Effective E5 license group" },
+    { "Name": "NWE-LIC-M365E3", "Description": "Modelled E3 license group" },
+    { "Name": "NWE-LIC-M365E1", "Description": "Modelled E1 license group" },
+    { "Name": "NWE-LIC-EntraP1", "Description": "Modelled Entra ID P1 add-on" },
+    { "Name": "NWE-LIC-EntraP2", "Description": "Modelled Entra ID P2 add-on" }
+  ],
+  "RoleGroups": [
+    { "Name": "NWE-ROL-GlobalAdmin", "Description": "Modelled Global Administrator role" },
+    { "Name": "NWE-ROL-IntuneAdministrator", "Description": "Modelled Intune Administrator role" },
+    { "Name": "NWE-ROL-SecurityAdministrator", "Description": "Modelled Security Administrator role" },
+    { "Name": "NWE-ROL-UserAdministrator", "Description": "Modelled User Administrator role" },
+    { "Name": "NWE-ROL-GlobalReader", "Description": "Modelled Global Reader role" }
+  ],
+  "DepartmentGroups": [
+    { "Name": "NWE-DEPT-IT", "Description": "IT department" },
+    { "Name": "NWE-DEPT-HR", "Description": "HR department" },
+    { "Name": "NWE-DEPT-Finance", "Description": "Finance department" },
+    { "Name": "NWE-DEPT-Operations", "Description": "Operations department" }
+  ]
+}
