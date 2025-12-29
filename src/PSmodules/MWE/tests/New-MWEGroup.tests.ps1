@@ -1,82 +1,150 @@
-#requires -Version 7.2
-#requires -Modules Pester
-
+#Requires -Version 7.2
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-BeforeAll {
-    # Load the function under test
-    $sutPath = Join-Path -Path $PSScriptRoot -ChildPath '..\New-MWEGroup.ps1'
-    . $sutPath
-}
+# --- LOAD MODULE DURING DISCOVERY ---
+Get-Module MWE -All | Remove-Module -Force
 
-Describe 'New-MWEGroup' {
+$here = Split-Path -Parent $PSCommandPath
+$moduleRoot = Split-Path -Parent $here
+$manifestPath = Join-Path $moduleRoot 'MWE.psd1'
 
-    BeforeEach {
-        # Default behavior: group does not exist
-        Mock -CommandName Get-MgGroup -MockWith { $null }
+Import-Module $manifestPath -Force
+# --- END LOAD ---
 
-        # Default create mock
-        Mock -CommandName New-MgGroup -MockWith {
-            [pscustomobject]@{
-                Id          = '00000000-0000-0000-0000-000000000000'
-                DisplayName = $DisplayName
+
+InModuleScope MWE {
+
+    Describe 'New-MWEGroup' {
+
+        BeforeEach {
+            # Default mocks (prevent real Graph calls)
+            Mock Get-MgGroup { $null }
+
+            $skuId = [guid]'11111111-1111-1111-1111-111111111111'
+            Mock Get-MgSubscribedSku {
+                @(
+                    [pscustomobject]@{
+                        SkuPartNumber = 'SPE_E5'
+                        SkuId         = $skuId
+                    }
+                )
             }
-        }
-    }
 
-    Context 'Naming and normalization' {
+            Mock New-MgGroup {
+                param(
+                    [string]$DisplayName,
+                    [string]$Description,
+                    [bool]$MailEnabled,
+                    [bool]$SecurityEnabled,
+                    [string]$MailNickname
+                )
 
-        It 'creates a normalized display name based on parameter set and Name' {
-            $result = New-MWEGroup -Name 'Test@01'
-
-            $result.DisplayName | Should -Be 'U-DUMMY-Test01'
-        }
-
-        It 'throws if the normalized name exceeds 64 characters' {
-            $longName = 'A' * 100
-
-            { New-MWEGroup -Name $longName } | Should -Throw
-        }
-    }
-
-    Context 'Duplicate detection' {
-
-        It 'throws if a group with the same displayName already exists' {
-            Mock -CommandName Get-MgGroup -MockWith {
                 [pscustomobject]@{
-                    Id          = 'existing-id'
-                    DisplayName = 'U-DUMMY-Test01'
+                    Id          = 'grp-777'
+                    DisplayName = $DisplayName
+                    Description = $Description
+                    MailEnabled = $MailEnabled
+                    SecurityEnabled = $SecurityEnabled
+                    MailNickname = $MailNickname
                 }
             }
 
-            { New-MWEGroup -Name 'Test01' } | Should -Throw
+            Mock Set-MgGroupLicense { }
         }
-    }
 
-    Context 'WhatIf behavior' {
+        Context 'Parameter and SKU validation' {
 
-        It 'does not call New-MgGroup when -WhatIf is used' {
-            Mock -CommandName Get-MgGroup -MockWith { $null }
-            Mock -CommandName New-MgGroup -MockWith {
-                throw 'New-MgGroup should not be called when -WhatIf is used'
+            It 'Throws when -Mock is not specified and SkuPartNumber is not present in Get-MgSubscribedSku' {
+                Mock Get-MgSubscribedSku { @([pscustomobject]@{ SkuPartNumber = 'SOME_OTHER_SKU'; SkuId = [guid]::NewGuid() }) }
+
+                { New-MWEGroup -SkuPartNumber 'SPE_E5' } | Should -Throw -ExpectedMessage 'No such License bought for the company: SPE_E5'
+                Assert-MockCalled Get-MgGroup -Times 0
+                Assert-MockCalled New-MgGroup -Times 0
+                Assert-MockCalled Set-MgGroupLicense -Times 0
             }
 
-            $result = New-MWEGroup -Name 'Test01' -WhatIf
+            It 'Does not throw in -Mock mode even if SKU does not exist' {
+                Mock Get-MgSubscribedSku { @() }
 
-            $result | Should -BeNullOrEmpty
-            Should -Invoke -CommandName New-MgGroup -Times 0 -Exactly
+                { New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock } | Should -Not -Throw
+                Assert-MockCalled New-MgGroup -Times 1
+                Assert-MockCalled Set-MgGroupLicense -Times 0
+            }
         }
 
-        It 'still throws when the group already exists even with -WhatIf' {
-            Mock -CommandName Get-MgGroup -MockWith {
-                [pscustomobject]@{
-                    Id          = 'existing-id'
-                    DisplayName = 'U-DUMMY-Test01'
+        Context 'Group creation behavior' {
+
+            It 'Throws when group already exists' {
+                Mock Get-MgGroup { [pscustomobject]@{ Id = 'existing-1' } }
+
+                { New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock } | Should -Throw -ExpectedMessage "Group 'U-LICENSE-SPE_E5' already exists*"
+                Assert-MockCalled New-MgGroup -Times 0
+                Assert-MockCalled Set-MgGroupLicense -Times 0
+            }
+
+            It 'Creates group with deterministic normalized name and properties' {
+                $result = New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock
+
+                $result | Should -Not -BeNullOrEmpty
+                $result.DisplayName | Should -Be 'U-LICENSE-SPE_E5'
+                $result.MailEnabled | Should -BeFalse
+                $result.SecurityEnabled | Should -BeTrue
+                $result.MailNickname | Should -Be 'U-LICENSE-SPE_E5'
+                $result.Description | Should -Be 'License assignment group for SPE_E5'
+
+                Assert-MockCalled New-MgGroup -Times 1
+                Assert-MockCalled Set-MgGroupLicense -Times 0
+            }
+
+            It 'Does not create anything and returns $null when -WhatIf is used' {
+                $result = New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock -WhatIf
+
+                $result | Should -BeNullOrEmpty
+                Assert-MockCalled New-MgGroup -Times 0
+                Assert-MockCalled Set-MgGroupLicense -Times 0
+            }
+        }
+
+        Context 'License assignment behavior' {
+
+            It 'Assigns license to the newly created group when not -Mock' {
+                $expectedSkuId = [guid]'11111111-1111-1111-1111-111111111111'
+
+                Mock Set-MgGroupLicense {
+                    param($AddLicenses, $RemoveLicenses, $GroupId)
+
+                    $GroupId | Should -Be 'grp-777'
+                    $RemoveLicenses.Count | Should -Be 0
+                    $AddLicenses.Count | Should -Be 1
+                    $AddLicenses[0].SkuId | Should -Be $expectedSkuId
                 }
+
+                $null = New-MWEGroup -SkuPartNumber 'SPE_E5'
+                Assert-MockCalled Set-MgGroupLicense -Times 1 -Exactly
             }
 
-            { New-MWEGroup -Name 'Test01' -WhatIf } | Should -Throw
+            It 'Skips license assignment in -Mock mode' {
+                $null = New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock
+                Assert-MockCalled Set-MgGroupLicense -Times 0
+            }
+        }
+
+        Context 'Naming constraints' {
+
+            It 'Throws when normalized group name exceeds 64 characters' {
+                $longSku = 'X' * 70
+
+                { New-MWEGroup -SkuPartNumber $longSku -Mock } | Should -Throw -ExpectedMessage "Normalized group name '*is longer than 64 characters*"
+                Assert-MockCalled New-MgGroup -Times 0
+            }
+
+            It 'Normalizes display name by stripping invalid characters' {
+                $result = New-MWEGroup -SkuPartNumber 'SPE E5!!' -Mock
+
+                $result.DisplayName | Should -Be 'U-LICENSE-SPEE5'
+                Assert-MockCalled New-MgGroup -Times 1
+            }
         }
     }
 }

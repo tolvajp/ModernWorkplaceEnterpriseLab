@@ -1,0 +1,39 @@
+{
+  "Auth": {
+    "Scopes": [
+    "Group.ReadWrite.All",
+    "LicenseAssignment.ReadWrite.All"
+    ]
+},
+
+  "licenseGroups": [
+    {
+      "skuPartNumber": "SPE_E5",
+      "mock": false
+    },
+    {
+      "skuPartNumber": "SPE_E3",
+      "mock": true
+    },
+    {
+      "skuPartNumber": "EMS_E5",
+      "mock": true
+    },
+    {
+      "skuPartNumber": "MDE_E5",
+      "mock": true
+    },
+    {
+      "skuPartNumber": "MDO_E5",
+      "mock": true
+    },
+    {
+      "skuPartNumber": "AAD_PREMIUM_P2",
+      "mock": true
+    },
+    {
+      "skuPartNumber": "VISIO_PLAN2",
+      "mock": true
+    }
+  ]
+}
