@@ -10,7 +10,7 @@
 
     Description       = 'Modern Workplace Enterprise (MWE) helper module for lab automation.'
 
-    FunctionsToExport = @(*)
+    FunctionsToExport = @('*')
     CmdletsToExport   = @()
     VariablesToExport = @()
     AliasesToExport   = @()
