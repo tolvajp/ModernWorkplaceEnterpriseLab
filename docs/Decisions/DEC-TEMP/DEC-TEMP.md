@@ -1,108 +1,90 @@
-# Decision Log – <Decision Title>
+# Decision Log – <Decision Domain Title>
 
 ---
 
 ## Decision ID
 - **ID:** DEC-XXXX
-- **Status:** Draft | Proposed | Accepted | Rejected
+- **Status:** Draft | Proposed | Accepted
 - **Date:** YYYY-MM-DD
 - **Owner:** Peter Tolvaj
 
 ---
 
-## Context
-Describe the problem space, constraints, and background that led to this decision.
-Focus on *why* a decision is required now.
+## Decision Domain
+
+Describe the topic this decision file covers.
+
+This file contains multiple **atomic decisions** that together define the chosen approach for this domain.
 
 ---
 
-## Scope
+## Related Decisions
 
-### In Scope
-Explicitly list what *is performed* by this runbook.
-
-Example:
-- Microsoft cloud tenant registration
-- Initial administrative access verification
-- Platform availability validation
-
-### Out of Scope
-Explicitly list what is *not performed* by this runbook.
-
-Example:
-- Device enrollment
-- Endpoint configuration
-- Compliance policies
-- Conditional Access
-- Security hardening beyond tenant creation
+List other decision domains that are relevant or prerequisite to this one.
 
 ---
 
-## Decision
-State the decision clearly and concisely.
-This section should be readable as a standalone statement.
+## Atomic Decisions
+
+Each subsection below represents **one atomic decision** within this domain.
+
+Only include the aspects that are relevant for that decision.
+Not every decision must cover all possible aspects.
+
+1. Atomic Decision 1
+2. Atomic decision 2
+3. Atomic decision 3
 
 ---
 
-## Rationale
-Explain why this decision was chosen over alternatives.
-Focus on risk reduction, trade-offs, and architectural alignment.
+### Atomic Decision 1 – <Short title>
+
+**Decision**  
+<clear description of the decision.>
+
+**Context**
+<FE scope, reasoning, alternatives cconsidered, ...>
 
 ---
 
-## Design Principles
-List the guiding principles that shape this decision.
+### Atomic Decision 2 – <Short title>
+
+**Decision**  
+...
+
+---
+
+*(Repeat as needed)*
+
+---
+
+## Cross-Cutting Rules / Invariants
+
+Rules that apply across all atomic decisions in this domain.
 
 Examples:
-- Least privilege
-- Fail-safe design
-- Explicit scoping
-- Recoverability
-
----
-
-## Alternatives Considered
-
-| Option | Pros | Cons | Reason Rejected |
-|------|------|------|----------------|
-| | | | |
-
----
-
-## Implications
-
-### Positive
-- 
-
-### Negative
-- 
-
----
-
-## Security Considerations
-Describe security impact, risks introduced, and mitigations.
-
----
-
-## Rollback / Exit Strategy
-Describe how this decision can be safely undone.
-Ensure no partial or misleading controls remain after rollback.
+- No direct user role or license assignment
+- Group membership expresses intent, not enforcement
+- Role assignment mode is invariant
 
 ---
 
 ## Validation
-- [ ] Validation criterion 1
-- [ ] Validation criterion 2
 
-Describe how validation is performed (tools, logs, testing).
+Describe how the correctness of this domain’s decisions is validated.
+
+This may happen:
+- Incrementally
+- After prerequisite steps (e.g. user creation)
+- Via scripts or manual checks
 
 ---
 
-## References
-- <link>
-- <link>
+## Rollback / Exit Strategy
+
+Describe how this decision domain can be undone safely.
 
 ---
 
 ## Notes
-Optional clarifications or cross-references (e.g. runbooks, appendices).
+Optional high-level observations or future considerations.

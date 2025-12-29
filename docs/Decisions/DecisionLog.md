@@ -23,6 +23,8 @@ The decision folders are the **source of truth**.
 | DEC-0001 | Licensing baseline selection (Microsoft 365 E5) | Accepted | 2025-12-22 | Peter Tolvaj |
 | DEC-0002 | Account and administrative role model | Accepted | 2025-12-24 | Peter Tolvaj |
 | DEC-0003 | Introduce custom domain for lab identities | Accepted | 2025-12-24 | Peter Tolvaj |
+| DEC-0004 | Define group taxonomy and naming rules | Accepted | 2025-12-28 | Peter Tolvaj |
+
 
 ---
 
