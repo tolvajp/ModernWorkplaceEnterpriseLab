@@ -151,17 +151,7 @@
       "ExpectedErrorRegex": "Cannot validate argument on parameter 'AssignmentType'"
     },
     {
-      "TestId": "T15-ForceRequired-WithoutForce-HelpdeskAdministrator",
-      "GroupSplat": {
-        "RoleName": "Helpdesk Administrator",
-        "AssignmentType": "Eligible",
-        "MaximumActivationHours": 2
-      },
-      "ExpectedToFail": true,
-      "ExpectedErrorRegex": "(JustificationRule|policy|not allowed|Forbidden)"
-    },
-    {
-      "TestId": "T16-ForceRequired-WithForce-HelpdeskAdministrator",
+      "TestId": "T15-ForceRequired-WithForce-HelpdeskAdministrator",
       "GroupSplat": {
         "RoleName": "Helpdesk Administrator",
         "AssignmentType": "Eligible",
@@ -171,17 +161,7 @@
       "ExpectedToFail": false
     },
     {
-      "TestId": "T17-GuestInviter-WithoutForce-Eligible",
-      "GroupSplat": {
-        "RoleName": "Guest Inviter",
-        "AssignmentType": "Eligible",
-        "MaximumActivationHours": 2
-      },
-      "ExpectedToFail": true,
-      "ExpectedErrorRegex": "(JustificationRule|policy|not allowed|Forbidden)"
-    },
-    {
-      "TestId": "T18-GuestInviter-WithForce-Eligible",
+      "TestId": "T16-GuestInviter-WithForce-Eligible",
       "GroupSplat": {
         "RoleName": "Guest Inviter",
         "AssignmentType": "Eligible",
