@@ -1,0 +1,54 @@
+{
+  "Auth": {
+    "Scopes": [
+      "Group.ReadWrite.All",
+      "Directory.ReadWrite.All",
+      "RoleManagement.ReadWrite.Directory"
+    ]
+  },
+
+  "ENTRAROLES": [
+    {
+      "RoleName": "Global Administrator",
+      "AssignmentType": "Eligible",
+      "MaximumActivationHours": 2,
+      "Force": true
+    },
+    {
+      "RoleName": "Security Reader",
+      "AssignmentType": "Active",
+      "MaximumActivationHours": 2,
+      "Force": true
+    },
+    {
+      "RoleName": "User Administrator",
+      "AssignmentType": "Eligible",
+      "MaximumActivationHours": 2,
+      "Force": true
+    },
+    {
+      "RoleName": "Groups Administrator",
+      "AssignmentType": "Eligible",
+      "MaximumActivationHours": 2,
+      "Force": true
+    },
+    {
+      "RoleName": "Directory Readers",
+      "AssignmentType": "Active",
+      "MaximumActivationHours": 2,
+      "Force": true
+    },
+    {
+      "RoleName": "Helpdesk Administrator",
+      "AssignmentType": "Eligible",
+      "MaximumActivationHours": 2,
+      "Force": true
+    },
+    {
+      "RoleName": "Guest Inviter",
+      "AssignmentType": "Eligible",
+      "MaximumActivationHours": 2,
+      "Force": true
+    }
+  ]
+}

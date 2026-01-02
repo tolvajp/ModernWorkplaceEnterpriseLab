@@ -1,0 +1,195 @@
+{
+  "Auth": {
+    "Scopes": [
+      "Group.ReadWrite.All",
+      "Directory.ReadWrite.All",
+      "RoleManagement.ReadWrite.Directory"
+    ]
+  },
+  "EntraRoles": [
+    {
+      "TestId": "T01-Eligible-Valid-GlobalAdministrator",
+      "GroupSplat": {
+        "RoleName": "Global Administrator",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2
+      },
+      "ExpectedToFail": false
+    },
+    {
+      "TestId": "T02-Active-Blocked-BecauseRoleAlreadyHasGroup",
+      "GroupSplat": {
+        "RoleName": "Global Administrator",
+        "AssignmentType": "Active",
+        "MaximumActivationHours": 2
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "already exists"
+    },
+    {
+      "TestId": "T03-Active-Invalid-RoleNotInTemplates",
+      "GroupSplat": {
+        "RoleName": "This Role Does Not Exist",
+        "AssignmentType": "Active",
+        "MaximumActivationHours": 2
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "No such Entra directory role template"
+    },
+    {
+      "TestId": "T04-Eligible-Invalid-RoleNotInTemplates",
+      "GroupSplat": {
+        "RoleName": "This Role Does Not Exist",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "No such Entra directory role template"
+    },
+    {
+      "TestId": "T05-Active-Valid-SecurityReader-Force-First",
+      "GroupSplat": {
+        "RoleName": "Security Reader",
+        "AssignmentType": "Active",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": false
+    },
+    {
+      "TestId": "T06-Active-Valid-SecurityReader-Force-Second",
+      "GroupSplat": {
+        "RoleName": "Security Reader",
+        "AssignmentType": "Active",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "already exists"
+    },
+    {
+      "TestId": "T07-Eligible-Valid-UserAdministrator-Force-First",
+      "GroupSplat": {
+        "RoleName": "User Administrator",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": false
+    },
+    {
+      "TestId": "T08-Eligible-Valid-UserAdministrator-Force-Second",
+      "GroupSplat": {
+        "RoleName": "User Administrator",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "already exists"
+    },
+    {
+      "TestId": "T09-Active-Then-Eligible-Blocked-DirectoryReaders-Active",
+      "GroupSplat": {
+        "RoleName": "Directory Readers",
+        "AssignmentType": "Active",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": false
+    },
+    {
+      "TestId": "T10-Active-Then-Eligible-Blocked-DirectoryReaders-Eligible",
+      "GroupSplat": {
+        "RoleName": "Directory Readers",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "already exists"
+    },
+    {
+      "TestId": "T11-Eligible-Then-Active-Blocked-GroupsAdministrator-Eligible",
+      "GroupSplat": {
+        "RoleName": "Groups Administrator",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": false
+    },
+    {
+      "TestId": "T12-Eligible-Then-Active-Blocked-GroupsAdministrator-Active",
+      "GroupSplat": {
+        "RoleName": "Groups Administrator",
+        "AssignmentType": "Active",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "already exists"
+    },
+    {
+      "TestId": "T13-Eligible-Typo-AssignmentType",
+      "GroupSplat": {
+        "RoleName": "Global Administrator",
+        "AssignmentType": "Eligibl3",
+        "MaximumActivationHours": 2
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "Cannot validate argument on parameter 'AssignmentType'"
+    },
+    {
+      "TestId": "T14-Active-Typo-AssignmentType",
+      "GroupSplat": {
+        "RoleName": "Global Administrator",
+        "AssignmentType": "Acttive",
+        "MaximumActivationHours": 2
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "Cannot validate argument on parameter 'AssignmentType'"
+    },
+    {
+      "TestId": "T15-ForceRequired-WithoutForce-HelpdeskAdministrator",
+      "GroupSplat": {
+        "RoleName": "Helpdesk Administrator",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "(JustificationRule|policy|not allowed|Forbidden)"
+    },
+    {
+      "TestId": "T16-ForceRequired-WithForce-HelpdeskAdministrator",
+      "GroupSplat": {
+        "RoleName": "Helpdesk Administrator",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": false
+    },
+    {
+      "TestId": "T17-GuestInviter-WithoutForce-Eligible",
+      "GroupSplat": {
+        "RoleName": "Guest Inviter",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "(JustificationRule|policy|not allowed|Forbidden)"
+    },
+    {
+      "TestId": "T18-GuestInviter-WithForce-Eligible",
+      "GroupSplat": {
+        "RoleName": "Guest Inviter",
+        "AssignmentType": "Eligible",
+        "MaximumActivationHours": 2,
+        "Force": true
+      },
+      "ExpectedToFail": true,
+      "ExpectedErrorRegex": "(conflicting object|already exists|BadRequest)"
+    }
+  ]
+}
