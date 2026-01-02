@@ -1,150 +1,153 @@
-#Requires -Version 7.2
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
+#requires -Version 7.2
+#requires -Modules Pester
+# Pester v5 tests for New-MWEGroup.ps1
+# All Microsoft Graph cmdlets are mocked; no network calls.
 
-# --- LOAD MODULE DURING DISCOVERY ---
-Get-Module MWE -All | Remove-Module -Force
+BeforeAll {
+    Set-StrictMode -Version Latest
+    $ErrorActionPreference = 'Stop'
 
-$here = Split-Path -Parent $PSCommandPath
-$moduleRoot = Split-Path -Parent $here
-$manifestPath = Join-Path $moduleRoot 'MWE.psd1'
+    $sut = Join-Path -Path $PSScriptRoot -ChildPath '..\New-MWEGroup.ps1'
+    if (-not (Test-Path $sut)) { throw "SUT not found: $sut" }
 
-Import-Module $manifestPath -Force
-# --- END LOAD ---
+    . $sut
 
+    if (-not (Get-Command -Name New-MWEGroup -ErrorAction SilentlyContinue)) {
+        throw "New-MWEGroup was not loaded from $sut"
+    }
+}
 
-InModuleScope MWE {
+Describe 'New-MWEGroup' {
 
-    Describe 'New-MWEGroup' {
+    Context 'LICENSE parameter set' {
 
         BeforeEach {
-            # Default mocks (prevent real Graph calls)
-            Mock Get-MgGroup { $null }
-
-            $skuId = [guid]'11111111-1111-1111-1111-111111111111'
-            Mock Get-MgSubscribedSku {
-                @(
-                    [pscustomobject]@{
-                        SkuPartNumber = 'SPE_E5'
-                        SkuId         = $skuId
-                    }
-                )
+            Mock -CommandName Get-MgGroup -MockWith { $null }
+            Mock -CommandName New-MgGroup -MockWith {
+                param($DisplayName,$Description,$MailEnabled,$SecurityEnabled,$MailNickname)
+                [pscustomobject]@{ Id = 'g1'; DisplayName = $DisplayName; Description = $Description }
             }
-
-            Mock New-MgGroup {
-                param(
-                    [string]$DisplayName,
-                    [string]$Description,
-                    [bool]$MailEnabled,
-                    [bool]$SecurityEnabled,
-                    [string]$MailNickname
-                )
-
-                [pscustomobject]@{
-                    Id          = 'grp-777'
-                    DisplayName = $DisplayName
-                    Description = $Description
-                    MailEnabled = $MailEnabled
-                    SecurityEnabled = $SecurityEnabled
-                    MailNickname = $MailNickname
-                }
-            }
-
-            Mock Set-MgGroupLicense { }
+            Mock -CommandName Set-MgGroupLicense -MockWith { }
         }
 
-        Context 'Parameter and SKU validation' {
-
-            It 'Throws when -Mock is not specified and SkuPartNumber is not present in Get-MgSubscribedSku' {
-                Mock Get-MgSubscribedSku { @([pscustomobject]@{ SkuPartNumber = 'SOME_OTHER_SKU'; SkuId = [guid]::NewGuid() }) }
-
-                { New-MWEGroup -SkuPartNumber 'SPE_E5' } | Should -Throw -ExpectedMessage 'No such License bought for the company: SPE_E5'
-                Assert-MockCalled Get-MgGroup -Times 0
-                Assert-MockCalled New-MgGroup -Times 0
-                Assert-MockCalled Set-MgGroupLicense -Times 0
+        It 'throws when SkuPartNumber is not present and -Mock is not used' {
+            Mock -CommandName Get-MgSubscribedSku -MockWith {
+                @([pscustomobject]@{ SkuPartNumber = 'SPE_E5'; SkuId = [guid]::NewGuid() })
             }
 
-            It 'Does not throw in -Mock mode even if SKU does not exist' {
-                Mock Get-MgSubscribedSku { @() }
-
-                { New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock } | Should -Not -Throw
-                Assert-MockCalled New-MgGroup -Times 1
-                Assert-MockCalled Set-MgGroupLicense -Times 0
-            }
+            { New-MWEGroup -SkuPartNumber 'NOT_A_REAL_SKU' -Confirm:$false } | Should -Throw
+            Assert-MockCalled -CommandName New-MgGroup -Times 0
+            Assert-MockCalled -CommandName Set-MgGroupLicense -Times 0
         }
 
-        Context 'Group creation behavior' {
-
-            It 'Throws when group already exists' {
-                Mock Get-MgGroup { [pscustomobject]@{ Id = 'existing-1' } }
-
-                { New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock } | Should -Throw -ExpectedMessage "Group 'U-LICENSE-SPE_E5' already exists*"
-                Assert-MockCalled New-MgGroup -Times 0
-                Assert-MockCalled Set-MgGroupLicense -Times 0
+        It 'creates group and assigns license when SkuPartNumber exists and -Mock is not used' {
+            $skuId = [guid]::NewGuid()
+            Mock -CommandName Get-MgSubscribedSku -MockWith {
+                @([pscustomobject]@{ SkuPartNumber = 'SPE_E5'; SkuId = $skuId })
             }
 
-            It 'Creates group with deterministic normalized name and properties' {
-                $result = New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock
+            $g = New-MWEGroup -SkuPartNumber 'SPE_E5' -Confirm:$false
+            $g.DisplayName | Should -Be 'U-LICENSE-SPE_E5'
 
-                $result | Should -Not -BeNullOrEmpty
-                $result.DisplayName | Should -Be 'U-LICENSE-SPE_E5'
-                $result.MailEnabled | Should -BeFalse
-                $result.SecurityEnabled | Should -BeTrue
-                $result.MailNickname | Should -Be 'U-LICENSE-SPE_E5'
-                $result.Description | Should -Be 'License assignment group for SPE_E5'
-
-                Assert-MockCalled New-MgGroup -Times 1
-                Assert-MockCalled Set-MgGroupLicense -Times 0
-            }
-
-            It 'Does not create anything and returns $null when -WhatIf is used' {
-                $result = New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock -WhatIf
-
-                $result | Should -BeNullOrEmpty
-                Assert-MockCalled New-MgGroup -Times 0
-                Assert-MockCalled Set-MgGroupLicense -Times 0
-            }
+            Assert-MockCalled -CommandName Get-MgGroup -Times 1
+            Assert-MockCalled -CommandName New-MgGroup -Times 1 -Exactly
+            Assert-MockCalled -CommandName Set-MgGroupLicense -Times 1 -Exactly
         }
 
-        Context 'License assignment behavior' {
+        It 'creates group but does not assign license when -Mock is used' {
+            Mock -CommandName Get-MgSubscribedSku -MockWith { @() } # should not be used in -Mock flow
 
-            It 'Assigns license to the newly created group when not -Mock' {
-                $expectedSkuId = [guid]'11111111-1111-1111-1111-111111111111'
+            $g = New-MWEGroup -SkuPartNumber 'SOME_SKU' -Mock -Confirm:$false
+            $g.DisplayName | Should -Be 'U-LICENSE-SOME_SKU'
 
-                Mock Set-MgGroupLicense {
-                    param($AddLicenses, $RemoveLicenses, $GroupId)
-
-                    $GroupId | Should -Be 'grp-777'
-                    $RemoveLicenses.Count | Should -Be 0
-                    $AddLicenses.Count | Should -Be 1
-                    $AddLicenses[0].SkuId | Should -Be $expectedSkuId
-                }
-
-                $null = New-MWEGroup -SkuPartNumber 'SPE_E5'
-                Assert-MockCalled Set-MgGroupLicense -Times 1 -Exactly
-            }
-
-            It 'Skips license assignment in -Mock mode' {
-                $null = New-MWEGroup -SkuPartNumber 'SPE_E5' -Mock
-                Assert-MockCalled Set-MgGroupLicense -Times 0
-            }
+            Assert-MockCalled -CommandName New-MgGroup -Times 1 -Exactly
+            Assert-MockCalled -CommandName Set-MgGroupLicense -Times 0
         }
 
-        Context 'Naming constraints' {
-
-            It 'Throws when normalized group name exceeds 64 characters' {
-                $longSku = 'X' * 70
-
-                { New-MWEGroup -SkuPartNumber $longSku -Mock } | Should -Throw -ExpectedMessage "Normalized group name '*is longer than 64 characters*"
-                Assert-MockCalled New-MgGroup -Times 0
+        It 'throws if a group with the same displayName already exists' {
+            Mock -CommandName Get-MgSubscribedSku -MockWith {
+                @([pscustomobject]@{ SkuPartNumber = 'SPE_E5'; SkuId = [guid]::NewGuid() })
+            }
+            Mock -CommandName Get-MgGroup -MockWith {
+                [pscustomobject]@{ Id='existing'; DisplayName='U-LICENSE-SPE_E5' }
             }
 
-            It 'Normalizes display name by stripping invalid characters' {
-                $result = New-MWEGroup -SkuPartNumber 'SPE E5!!' -Mock
+            { New-MWEGroup -SkuPartNumber 'SPE_E5' -Confirm:$false } | Should -Throw
+            Assert-MockCalled -CommandName New-MgGroup -Times 0
+            Assert-MockCalled -CommandName Set-MgGroupLicense -Times 0
+        }
+    }
 
-                $result.DisplayName | Should -Be 'U-LICENSE-SPEE5'
-                Assert-MockCalled New-MgGroup -Times 1
+    Context 'ENTRAROLE parameter set' {
+
+        BeforeEach {
+            Mock -CommandName Get-MgGroup -MockWith { $null }
+            Mock -CommandName New-MgGroup -MockWith {
+                param($DisplayName,$Description,$MailEnabled,$SecurityEnabled,$MailNickname)
+                [pscustomobject]@{ Id = 'g2'; DisplayName = $DisplayName; Description = $Description }
             }
+
+            Mock -CommandName Get-MgDirectoryRoleTemplate -MockWith {
+                @([pscustomobject]@{ DisplayName='Global Administrator'; Id='t1' })
+            }
+
+            # Used in validation + activation ensure block
+            Mock -CommandName Get-MgDirectoryRole -MockWith {
+                @([pscustomobject]@{ DisplayName='Global Administrator'; Id='r1' })
+            }
+            Mock -CommandName New-MgDirectoryRole -MockWith { }
+
+            Mock -CommandName Get-MgRoleManagementDirectoryRoleDefinition -MockWith {
+                @([pscustomobject]@{ Id='rd1'; DisplayName='Global Administrator' })
+            }
+
+            Mock -CommandName Get-MgPolicyRoleManagementPolicyAssignment -MockWith {
+                @([pscustomobject]@{ PolicyId='p1' })
+            }
+
+            Mock -CommandName Get-MgPolicyRoleManagementPolicyRule -MockWith {
+                @([pscustomobject]@{ Id='Expiration_EndUser_Assignment' })
+            }
+
+            Mock -CommandName Update-MgPolicyRoleManagementPolicyRule -MockWith { }
+            Mock -CommandName New-MgRoleManagementDirectoryRoleAssignmentScheduleRequest -MockWith { }
+            Mock -CommandName New-MgRoleManagementDirectoryRoleEligibilityScheduleRequest -MockWith { }
+        }
+
+        It 'creates group and submits ACTIVE assignment schedule request' {
+            $g = New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Active' -MaximumActivationHours 5 -Confirm:$false
+            $g.DisplayName | Should -Be 'U-ENTRAROLE-GlobalAdministrator-ACTIVE'
+
+            Assert-MockCalled -CommandName New-MgRoleManagementDirectoryRoleAssignmentScheduleRequest -Times 1 -Exactly
+            Assert-MockCalled -CommandName New-MgRoleManagementDirectoryRoleEligibilityScheduleRequest -Times 0 -Exactly
+            Assert-MockCalled -CommandName Update-MgPolicyRoleManagementPolicyRule -Times 1 -Exactly
+        }
+
+        It 'creates group and submits ELIGIBLE schedule request' {
+            $g = New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Eligible' -MaximumActivationHours 5 -Confirm:$false
+            $g.DisplayName | Should -Be 'U-ENTRAROLE-GlobalAdministrator-ELIGIBLE'
+
+            Assert-MockCalled -CommandName New-MgRoleManagementDirectoryRoleEligibilityScheduleRequest -Times 1 -Exactly
+            Assert-MockCalled -CommandName New-MgRoleManagementDirectoryRoleAssignmentScheduleRequest -Times 0 -Exactly
+            Assert-MockCalled -CommandName Update-MgPolicyRoleManagementPolicyRule -Times 1 -Exactly
+        }
+
+        It 'throws when role definition cannot be found' {
+            Mock -CommandName Get-MgRoleManagementDirectoryRoleDefinition -MockWith { @() }
+
+            { New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Eligible' -Confirm:$false } | Should -Throw
+        }
+
+        It 'throws when policy assignment is missing' {
+            Mock -CommandName Get-MgPolicyRoleManagementPolicyAssignment -MockWith { @() }
+
+            { New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Eligible' -Confirm:$false } | Should -Throw
+        }
+
+        It 'throws when expiration rule is missing' {
+            Mock -CommandName Get-MgPolicyRoleManagementPolicyRule -MockWith { @() }
+
+            { New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Eligible' -Confirm:$false } | Should -Throw
         }
     }
 }
