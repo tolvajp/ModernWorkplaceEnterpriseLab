@@ -20,8 +20,7 @@
       "TestId": "T02-Active-Blocked-BecauseRoleAlreadyHasGroup",
       "GroupSplat": {
         "RoleName": "Global Administrator",
-        "AssignmentType": "Active",
-        "MaximumActivationHours": 2
+        "AssignmentType": "Active"
       },
       "ExpectedToFail": true,
       "ExpectedErrorRegex": "already exists"
@@ -30,11 +29,10 @@
       "TestId": "T03-Active-Invalid-RoleNotInTemplates",
       "GroupSplat": {
         "RoleName": "This Role Does Not Exist",
-        "AssignmentType": "Active",
-        "MaximumActivationHours": 2
+        "AssignmentType": "Active"
       },
       "ExpectedToFail": true,
-      "ExpectedErrorRegex": "No such Entra directory role template"
+      "ExpectedErrorRegex": "No such Entra directory role definition"
     },
     {
       "TestId": "T04-Eligible-Invalid-RoleNotInTemplates",
@@ -44,14 +42,13 @@
         "MaximumActivationHours": 2
       },
       "ExpectedToFail": true,
-      "ExpectedErrorRegex": "No such Entra directory role template"
+      "ExpectedErrorRegex": "No such Entra directory role definition"
     },
     {
       "TestId": "T05-Active-Valid-SecurityReader-Force-First",
       "GroupSplat": {
         "RoleName": "Security Reader",
         "AssignmentType": "Active",
-        "MaximumActivationHours": 2,
         "Force": true
       },
       "ExpectedToFail": false
@@ -61,7 +58,6 @@
       "GroupSplat": {
         "RoleName": "Security Reader",
         "AssignmentType": "Active",
-        "MaximumActivationHours": 2,
         "Force": true
       },
       "ExpectedToFail": true,
@@ -93,7 +89,6 @@
       "GroupSplat": {
         "RoleName": "Directory Readers",
         "AssignmentType": "Active",
-        "MaximumActivationHours": 2,
         "Force": true
       },
       "ExpectedToFail": false
@@ -124,7 +119,6 @@
       "GroupSplat": {
         "RoleName": "Groups Administrator",
         "AssignmentType": "Active",
-        "MaximumActivationHours": 2,
         "Force": true
       },
       "ExpectedToFail": true,

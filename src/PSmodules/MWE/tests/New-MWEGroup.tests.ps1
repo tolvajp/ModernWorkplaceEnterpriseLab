@@ -1,153 +1,270 @@
-#requires -Version 7.2
-#requires -Modules Pester
-# Pester v5 tests for New-MWEGroup.ps1
-# All Microsoft Graph cmdlets are mocked; no network calls.
+# New-MWEGroup.Tests.ps1
+# Pester v5.7.x
+#
+# Scope:
+# - Wrappers are tested elsewhere.
+# - Each helper is tested elsewhere.
+# - Here we test ONLY New-MWEGroup orchestration: parameter contract, flow, helper call wiring, ShouldProcess gate.
+#
+# Safety:
+# - Default-deny any accidental direct Graph calls.
+# - Default-deny any unexpected Invoke-MWECommand -Command values (fail fast).
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
 BeforeAll {
-    Set-StrictMode -Version Latest
-    $ErrorActionPreference = 'Stop'
+    . (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers.ps1')
+    Import-MWEModuleUnderTest
 
-    $sut = Join-Path -Path $PSScriptRoot -ChildPath '..\New-MWEGroup.ps1'
-    if (-not (Test-Path $sut)) { throw "SUT not found: $sut" }
-
-    . $sut
-
-    if (-not (Get-Command -Name New-MWEGroup -ErrorAction SilentlyContinue)) {
-        throw "New-MWEGroup was not loaded from $sut"
+    # Ensure the function under test is available even if not exported
+    $moduleRoot = Get-MWEModuleRoot
+    foreach ($sub in @('Private','Public')) {
+        $p = Join-Path -Path $moduleRoot -ChildPath $sub
+        if (Test-Path -LiteralPath $p) {
+            Get-ChildItem -LiteralPath $p -Filter '*.ps1' -File | ForEach-Object { . $_.FullName }
+        }
     }
+    if (-not (Get-Command -Name 'New-MWEGroup' -ErrorAction SilentlyContinue)) {
+        $fn = Get-ChildItem -LiteralPath $moduleRoot -Recurse -Filter 'New-MWEGroup.ps1' -File -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $fn) { throw "Test setup failed: could not locate New-MWEGroup.ps1 under $moduleRoot" }
+        . $fn.FullName
+    }
+
+    # Ensure a command exists for the safety net mock (Graph).
+    if (-not (Get-Command -Name 'Invoke-MgGraphRequest' -ErrorAction SilentlyContinue)) {
+        function Invoke-MgGraphRequest { param(); throw "Invoke-MgGraphRequest stub executed (should be mocked)." }
+    }
+
+    # ModuleName for module-scoped mocks (if applicable)
+    $script:ModuleName = (Get-Module -Name 'MWE' -ErrorAction SilentlyContinue | Select-Object -First 1).Name
+
+    $script:sku = 'ENTERPRISEPACK'
+    $script:roleName = 'Security Reader'
 }
 
 Describe 'New-MWEGroup' {
 
-    Context 'LICENSE parameter set' {
-
-        BeforeEach {
-            Mock -CommandName Get-MgGroup -MockWith { $null }
-            Mock -CommandName New-MgGroup -MockWith {
-                param($DisplayName,$Description,$MailEnabled,$SecurityEnabled,$MailNickname)
-                [pscustomobject]@{ Id = 'g1'; DisplayName = $DisplayName; Description = $Description }
-            }
-            Mock -CommandName Set-MgGroupLicense -MockWith { }
-        }
-
-        It 'throws when SkuPartNumber is not present and -Mock is not used' {
-            Mock -CommandName Get-MgSubscribedSku -MockWith {
-                @([pscustomobject]@{ SkuPartNumber = 'SPE_E5'; SkuId = [guid]::NewGuid() })
-            }
-
-            { New-MWEGroup -SkuPartNumber 'NOT_A_REAL_SKU' -Confirm:$false } | Should -Throw
-            Assert-MockCalled -CommandName New-MgGroup -Times 0
-            Assert-MockCalled -CommandName Set-MgGroupLicense -Times 0
-        }
-
-        It 'creates group and assigns license when SkuPartNumber exists and -Mock is not used' {
-            $skuId = [guid]::NewGuid()
-            Mock -CommandName Get-MgSubscribedSku -MockWith {
-                @([pscustomobject]@{ SkuPartNumber = 'SPE_E5'; SkuId = $skuId })
-            }
-
-            $g = New-MWEGroup -SkuPartNumber 'SPE_E5' -Confirm:$false
-            $g.DisplayName | Should -Be 'U-LICENSE-SPE_E5'
-
-            Assert-MockCalled -CommandName Get-MgGroup -Times 1
-            Assert-MockCalled -CommandName New-MgGroup -Times 1 -Exactly
-            Assert-MockCalled -CommandName Set-MgGroupLicense -Times 1 -Exactly
-        }
-
-        It 'creates group but does not assign license when -Mock is used' {
-            Mock -CommandName Get-MgSubscribedSku -MockWith { @() } # should not be used in -Mock flow
-
-            $g = New-MWEGroup -SkuPartNumber 'SOME_SKU' -Mock -Confirm:$false
-            $g.DisplayName | Should -Be 'U-LICENSE-SOME_SKU'
-
-            Assert-MockCalled -CommandName New-MgGroup -Times 1 -Exactly
-            Assert-MockCalled -CommandName Set-MgGroupLicense -Times 0
-        }
-
-        It 'throws if a group with the same displayName already exists' {
-            Mock -CommandName Get-MgSubscribedSku -MockWith {
-                @([pscustomobject]@{ SkuPartNumber = 'SPE_E5'; SkuId = [guid]::NewGuid() })
-            }
-            Mock -CommandName Get-MgGroup -MockWith {
-                [pscustomobject]@{ Id='existing'; DisplayName='U-LICENSE-SPE_E5' }
-            }
-
-            { New-MWEGroup -SkuPartNumber 'SPE_E5' -Confirm:$false } | Should -Throw
-            Assert-MockCalled -CommandName New-MgGroup -Times 0
-            Assert-MockCalled -CommandName Set-MgGroupLicense -Times 0
+    BeforeEach {
+        # Safety net: if anything tries to call Graph directly, fail immediately.
+        Mock -CommandName Invoke-MgGraphRequest -MockWith { throw 'SAFETY: Invoke-MgGraphRequest was called unexpectedly.' }
+        if ($script:ModuleName) {
+            Mock -ModuleName $script:ModuleName -CommandName Invoke-MgGraphRequest -MockWith { throw 'SAFETY: Invoke-MgGraphRequest was called unexpectedly.' }
         }
     }
 
-    Context 'ENTRAROLE parameter set' {
+    Context 'Must-have: parameter-set contract (non-interactive)' {
+
+        It 'LICENSE: throws when SkuPartNumber is empty (avoids mandatory prompt)' {
+            { New-MWEGroup -SkuPartNumber '' -Mock } | Should -Throw
+        }
+
+        It 'ENTRAROLE: throws when RoleName is empty (avoids mandatory prompt)' {
+            { New-MWEGroup -RoleName '' -AssignmentType 'Active' } | Should -Throw
+        }
+
+        It 'ENTRAROLE: throws when AssignmentType is empty/invalid (avoids mandatory prompt)' {
+            { New-MWEGroup -RoleName $script:roleName -AssignmentType '' } | Should -Throw
+        }
+    }
+
+    Context 'Must-have: orchestration preconditions and call flow' {
 
         BeforeEach {
-            Mock -CommandName Get-MgGroup -MockWith { $null }
-            Mock -CommandName New-MgGroup -MockWith {
-                param($DisplayName,$Description,$MailEnabled,$SecurityEnabled,$MailNickname)
-                [pscustomobject]@{ Id = 'g2'; DisplayName = $DisplayName; Description = $Description }
+            # Default deny: any unexpected command routed via Invoke-MWECommand should fail.
+            $script:CommandCalls = @()
+            $mockBody = {
+                param([string]$Command, [hashtable]$Splat)
+                $script:CommandCalls += $Command
+                switch ($Command) {
+                    'Get-MgSubscribedSku' { [pscustomobject]@{ SkuPartNumber = @($script:sku) } }
+                    'Assert-MWEGroupParameters' { $null }
+                    'Assert-MWEExistingGroup' { throw 'exists' }
+                    default { throw "UNEXPECTED Invoke-MWECommand -Command '$Command' in this test." }
+                }
             }
 
-            Mock -CommandName Get-MgDirectoryRoleTemplate -MockWith {
-                @([pscustomobject]@{ DisplayName='Global Administrator'; Id='t1' })
-            }
-
-            # Used in validation + activation ensure block
-            Mock -CommandName Get-MgDirectoryRole -MockWith {
-                @([pscustomobject]@{ DisplayName='Global Administrator'; Id='r1' })
-            }
-            Mock -CommandName New-MgDirectoryRole -MockWith { }
-
-            Mock -CommandName Get-MgRoleManagementDirectoryRoleDefinition -MockWith {
-                @([pscustomobject]@{ Id='rd1'; DisplayName='Global Administrator' })
-            }
-
-            Mock -CommandName Get-MgPolicyRoleManagementPolicyAssignment -MockWith {
-                @([pscustomobject]@{ PolicyId='p1' })
-            }
-
-            Mock -CommandName Get-MgPolicyRoleManagementPolicyRule -MockWith {
-                @([pscustomobject]@{ Id='Expiration_EndUser_Assignment' })
-            }
-
-            Mock -CommandName Update-MgPolicyRoleManagementPolicyRule -MockWith { }
-            Mock -CommandName New-MgRoleManagementDirectoryRoleAssignmentScheduleRequest -MockWith { }
-            Mock -CommandName New-MgRoleManagementDirectoryRoleEligibilityScheduleRequest -MockWith { }
+            Mock -CommandName Invoke-MWECommand -MockWith $mockBody
+            if ($script:ModuleName) { Mock -ModuleName $script:ModuleName -CommandName Invoke-MWECommand -MockWith $mockBody }
         }
 
-        It 'creates group and submits ACTIVE assignment schedule request' {
-            $g = New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Active' -MaximumActivationHours 5 -Confirm:$false
-            $g.DisplayName | Should -Be 'U-ENTRAROLE-GlobalAdministrator-ACTIVE'
+        It 'Stops early when Assert-MWEExistingGroup throws (no create, no side-effects)' {
+            { New-MWEGroup -SkuPartNumber $script:sku -Mock -Confirm:$false } | Should -Throw -ExpectedMessage '*exists*'
 
-            Assert-MockCalled -CommandName New-MgRoleManagementDirectoryRoleAssignmentScheduleRequest -Times 1 -Exactly
-            Assert-MockCalled -CommandName New-MgRoleManagementDirectoryRoleEligibilityScheduleRequest -Times 0 -Exactly
-            Assert-MockCalled -CommandName Update-MgPolicyRoleManagementPolicyRule -Times 1 -Exactly
+            $script:CommandCalls | Should -Contain 'Assert-MWEExistingGroup'
+            $script:CommandCalls | Should -Not -Contain 'New-MWEGroupResource'
+            $script:CommandCalls | Should -Not -Contain 'Set-MWEGroupLicenseAssignment'
+            $script:CommandCalls | Should -Not -Contain 'Set-MWEGroupEntraRoleAssignment'
+        }
+    }
+
+    Context 'Must-have: LICENSE intent flow' {
+
+        BeforeEach {
+            $script:newGroup = [pscustomobject]@{ Id = 'G-1'; DisplayName = 'U-LICENSE-ENTERPRISEPACK' }
+            $script:CommandCalls = @()
+            $script:LastLicenseSplat = $null
+
+            $mockBody = {
+                param([string]$Command, [hashtable]$Splat)
+                $script:CommandCalls += $Command
+                switch ($Command) {
+                    'Get-MgSubscribedSku' { [pscustomobject]@{ SkuPartNumber = @($script:sku, 'OTHER') } }
+                    'Assert-MWEGroupParameters' { $null }
+                    'Assert-MWEExistingGroup' { $null }
+                    'New-MWEGroupResource' { $script:newGroup }
+                    'Set-MWEGroupLicenseAssignment' { $script:LastLicenseSplat = $Splat; $null }
+                    'Set-MWEGroupEntraRoleAssignment' { throw 'ENTRAROLE path should not be called for LICENSE intent' }
+                    default { throw "UNEXPECTED Invoke-MWECommand -Command '$Command' in LICENSE test." }
+                }
+            }
+
+            Mock -CommandName Invoke-MWECommand -MockWith $mockBody
+            if ($script:ModuleName) { Mock -ModuleName $script:ModuleName -CommandName Invoke-MWECommand -MockWith $mockBody }
+
+            Mock -CommandName Write-Information -MockWith { }
+            if ($script:ModuleName) { Mock -ModuleName $script:ModuleName -CommandName Write-Information -MockWith { } }
         }
 
-        It 'creates group and submits ELIGIBLE schedule request' {
-            $g = New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Eligible' -MaximumActivationHours 5 -Confirm:$false
-            $g.DisplayName | Should -Be 'U-ENTRAROLE-GlobalAdministrator-ELIGIBLE'
+        It 'Creates group and calls Set-MWEGroupLicenseAssignment with GroupId + SkuPartNumber' {
+            $result = New-MWEGroup -SkuPartNumber $script:sku -Confirm:$false
 
-            Assert-MockCalled -CommandName New-MgRoleManagementDirectoryRoleEligibilityScheduleRequest -Times 1 -Exactly
-            Assert-MockCalled -CommandName New-MgRoleManagementDirectoryRoleAssignmentScheduleRequest -Times 0 -Exactly
-            Assert-MockCalled -CommandName Update-MgPolicyRoleManagementPolicyRule -Times 1 -Exactly
+            $result | Should -Not -BeNullOrEmpty
+            $script:CommandCalls | Should -Contain 'New-MWEGroupResource'
+            $script:CommandCalls | Should -Contain 'Set-MWEGroupLicenseAssignment'
+
+            $script:LastLicenseSplat.GroupId | Should -Be 'G-1'
+            $script:LastLicenseSplat.SkuPartNumber | Should -Be $script:sku
         }
 
-        It 'throws when role definition cannot be found' {
-            Mock -CommandName Get-MgRoleManagementDirectoryRoleDefinition -MockWith { @() }
+        It 'WhatIf: runs without throwing and performs only preflight checks (no direct Graph calls)' {
+            { New-MWEGroup -SkuPartNumber $script:sku -WhatIf } | Should -Not -Throw
+            $script:CommandCalls | Should -Contain 'Assert-MWEExistingGroup'
+        }
+    }
 
-            { New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Eligible' -Confirm:$false } | Should -Throw
+    Context 'Must-have: ENTRAROLE intent flow' {
+
+        BeforeEach {
+            $script:newGroup = [pscustomobject]@{ Id = 'G-2'; DisplayName = 'U-ENTRAROLE-SecurityReader-ACTIVE' }
+            $script:roleDefinitions = @([pscustomobject]@{ DisplayName = $script:roleName })
+            $script:directoryRoles = @([pscustomobject]@{ DisplayName = $script:roleName })
+            $script:CommandCalls = @()
+            $script:LastRoleAssignmentSplat = $null
+            $script:LastParamValidationSplat = $null
+
+            $mockBody = {
+                param([string]$Command, [hashtable]$Splat)
+                $script:CommandCalls += $Command
+                switch ($Command) {
+                    'Get-MgRoleManagementDirectoryRoleDefinition' { $script:roleDefinitions }
+                    'Get-MgDirectoryRole' { $script:directoryRoles }
+                    'Assert-MWEGroupParameters' { $script:LastParamValidationSplat = $Splat; $null }
+                    'Assert-MWEExistingGroup' { $null }
+                    'New-MWEGroupResource' { $script:newGroup }
+                    'Set-MWEGroupEntraRoleAssignment' { $script:LastRoleAssignmentSplat = $Splat; $null }
+                    'Set-MWEGroupLicenseAssignment' { throw 'LICENSE path should not be called for ENTRAROLE intent' }
+                    default { throw "UNEXPECTED Invoke-MWECommand -Command '$Command' in ENTRAROLE test." }
+                }
+            }
+
+            Mock -CommandName Invoke-MWECommand -MockWith $mockBody
+            if ($script:ModuleName) { Mock -ModuleName $script:ModuleName -CommandName Invoke-MWECommand -MockWith $mockBody }
+
+            Mock -CommandName Write-Information -MockWith { }
+            if ($script:ModuleName) { Mock -ModuleName $script:ModuleName -CommandName Write-Information -MockWith { } }
         }
 
-        It 'throws when policy assignment is missing' {
-            Mock -CommandName Get-MgPolicyRoleManagementPolicyAssignment -MockWith { @() }
+        It 'Active: calls Set-MWEGroupEntraRoleAssignment without MaximumActivationHours' {
+            New-MWEGroup -RoleName $script:roleName -AssignmentType 'Active' -Confirm:$false | Out-Null
 
-            { New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Eligible' -Confirm:$false } | Should -Throw
+            $script:CommandCalls | Should -Contain 'Set-MWEGroupEntraRoleAssignment'
+
+            $script:LastRoleAssignmentSplat.GroupId | Should -Be 'G-2'
+            $script:LastRoleAssignmentSplat.RoleName | Should -Be $script:roleName
+            $script:LastRoleAssignmentSplat.AssignmentType | Should -Be 'Active'
+            $script:LastRoleAssignmentSplat.ContainsKey('MaximumActivationHours') | Should -BeFalse
         }
 
-        It 'throws when expiration rule is missing' {
-            Mock -CommandName Get-MgPolicyRoleManagementPolicyRule -MockWith { @() }
+        It 'Eligible: defaults MaximumActivationHours to 9 when not provided' {
+            New-MWEGroup -RoleName $script:roleName -AssignmentType 'Eligible' -Confirm:$false | Out-Null
 
-            { New-MWEGroup -RoleName 'Global Administrator' -AssignmentType 'Eligible' -Confirm:$false } | Should -Throw
+            $script:LastRoleAssignmentSplat.AssignmentType | Should -Be 'Eligible'
+            $script:LastRoleAssignmentSplat.MaximumActivationHours | Should -Be 9
+
+            $script:LastParamValidationSplat.Intent | Should -Be 'ENTRAROLE'
+            $script:LastParamValidationSplat.AssignmentType | Should -Be 'Eligible'
+            $script:LastParamValidationSplat.MaximumActivationHours | Should -Be 9
+        }
+
+        It 'Active: when MaximumActivationHours is provided, surfaces validation failure and stops' {
+            $override = {
+                param([string]$Command, [hashtable]$Splat)
+                $script:CommandCalls += $Command
+                switch ($Command) {
+                    'Get-MgRoleManagementDirectoryRoleDefinition' { $script:roleDefinitions }
+                    'Get-MgDirectoryRole' { $script:directoryRoles }
+                    'Assert-MWEGroupParameters' { throw "Active PIM assignemeent doesn't need MaximumActivationHours to be set." }
+                    default { throw "UNEXPECTED Invoke-MWECommand -Command '$Command' after override: $Command" }
+                }
+            }
+            Mock -CommandName Invoke-MWECommand -MockWith $override
+            if ($script:ModuleName) { Mock -ModuleName $script:ModuleName -CommandName Invoke-MWECommand -MockWith $override }
+
+            { New-MWEGroup -RoleName $script:roleName -AssignmentType 'Active' -MaximumActivationHours 1 -Confirm:$false } |
+                Should -Throw -ExpectedMessage "*doesn't need MaximumActivationHours*"
+        }
+
+        It 'WhatIf: runs without throwing and performs only preflight checks (no direct Graph calls)' {
+            { New-MWEGroup -RoleName $script:roleName -AssignmentType 'Eligible' -WhatIf } | Should -Not -Throw
+            $script:CommandCalls | Should -Contain 'Assert-MWEExistingGroup'
+        }
+    }
+
+    Context 'Strongly recommended: error propagation (no swallowing)' {
+
+        BeforeEach {
+            $script:CommandCalls = @()
+            $mockBody = {
+                param([string]$Command, [hashtable]$Splat)
+                $script:CommandCalls += $Command
+                switch ($Command) {
+                    'Get-MgSubscribedSku' { [pscustomobject]@{ SkuPartNumber = @($script:sku) } }
+                    'Assert-MWEGroupParameters' { $null }
+                    'Assert-MWEExistingGroup' { $null }
+                    'New-MWEGroupResource' { throw 'create failed' }
+                    default { throw "UNEXPECTED Invoke-MWECommand -Command '$Command' in error propagation test." }
+                }
+            }
+
+            Mock -CommandName Invoke-MWECommand -MockWith $mockBody
+            if ($script:ModuleName) { Mock -ModuleName $script:ModuleName -CommandName Invoke-MWECommand -MockWith $mockBody }
+        }
+
+        It 'Propagates error from group creation (New-MWEGroupResource)' {
+            { New-MWEGroup -SkuPartNumber $script:sku -Confirm:$false } | Should -Throw -ExpectedMessage '*create failed*'
+        }
+
+        It 'Propagates error from license assignment helper' {
+            $script:newGroup = [pscustomobject]@{ Id = 'G-9'; DisplayName = 'U-LICENSE-ENTERPRISEPACK' }
+
+            $mockBody2 = {
+                param([string]$Command, [hashtable]$Splat)
+                $script:CommandCalls += $Command
+                switch ($Command) {
+                    'Get-MgSubscribedSku' { [pscustomobject]@{ SkuPartNumber = @($script:sku) } }
+                    'Assert-MWEGroupParameters' { $null }
+                    'Assert-MWEExistingGroup' { $null }
+                    'New-MWEGroupResource' { $script:newGroup }
+                    'Set-MWEGroupLicenseAssignment' { throw 'assign failed' }
+                    default { throw "UNEXPECTED Invoke-MWECommand -Command '$Command' in assign propagation test." }
+                }
+            }
+
+            Mock -CommandName Invoke-MWECommand -MockWith $mockBody2
+            if ($script:ModuleName) { Mock -ModuleName $script:ModuleName -CommandName Invoke-MWECommand -MockWith $mockBody2 }
+
+            { New-MWEGroup -SkuPartNumber $script:sku -Confirm:$false } | Should -Throw -ExpectedMessage '*assign failed*'
         }
     }
 }

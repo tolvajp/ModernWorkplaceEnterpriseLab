@@ -70,7 +70,7 @@ foreach ($test in $config.EntraRoles) {
 }
 
 "`n=== TEST SUMMARY ===`n"
-$results | Format-Table -AutoSize
+$results | Format-List *
 
 if ($results.Where({ -not $_.Passed }).Count -gt 0) {
     throw "One or more tests failed."

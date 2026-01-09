@@ -1,6 +1,6 @@
 @{
     RootModule        = 'MWE.psm1'
-    ModuleVersion     = '0.1.0'
+    ModuleVersion     = '0.1.1'
     CompatiblePSEditions = @('Core')
     PowerShellVersion = '7.2'
 
@@ -10,7 +10,7 @@
 
     Description       = 'Modern Workplace Enterprise (MWE) helper module for lab automation.'
 
-    FunctionsToExport = @('*')
+    FunctionsToExport = @('New-MWEGroup')
     CmdletsToExport   = @()
     VariablesToExport = @()
     AliasesToExport   = @()
