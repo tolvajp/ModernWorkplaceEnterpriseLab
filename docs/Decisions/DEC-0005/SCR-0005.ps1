@@ -29,5 +29,6 @@ if (Test-Path -LiteralPath $configPath) {
 }
 
 foreach ($group in $config.licenseGroups) {
+$group | Format-List * -Force
     New-MWEGroup @group
 }

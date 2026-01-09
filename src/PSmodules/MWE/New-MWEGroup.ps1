@@ -1,176 +1,206 @@
-# Private helper functions are dot-sourced so this script remains runnable standalone (tests dot-source it).
-# When imported as a module, MWE.psm1 also dot-sources these helpers.
-
-$privateFunctions = @(
-    'Assert-MWEGroupParameters.ps1',
-    'ConvertTo-NWEStandardizedName.ps1',
-    'Get-MWEExistingGroup.ps1',
-    'Invoke-NWEWithLazyProperty.ps1',
-    'New-MWEGroupSplat.ps1'
-)
-
-foreach ($privateFunction in $privateFunctions) {
-    $helperPath = Join-Path -Path $PSScriptRoot -ChildPath "Private\$privateFunction"
-    if (-not (Test-Path -Path $helperPath)) { throw "Private helper not found: $helperPath" }
-    . $helperPath
-}
-
 function New-MWEGroup {
-<#
+  <#
 .SYNOPSIS
 Creates a Microsoft Entra ID security group according to enforced MWE decisions.
 
 .DESCRIPTION
 Creates a Microsoft Entra ID **security group** following the Modern Workplace Enterprise (MWE)
-decision model. The function supports two distinct **group intent categories** via parameter sets:
+decision model and taxonomy.
 
-- **LICENSE** – Group-based license assignment groups
-- **ENTRAROLE** – Entra ID directory role assignment groups (Active or Eligible via PIM)
+The function represents a single public operational domain: **group creation**.
+All naming, validation, and enforcement rules are derived from explicit decision logs.
 
-Supports `-WhatIf` and `-Confirm`.
+Supported group intents are:
+- LICENSE     – Group-based Microsoft 365 license assignment
+- ENTRAROLE  – Group-based Entra ID directory role assignment (Active or Eligible via PIM)
+
+The function enforces:
+- deterministic, decision-driven group naming
+- strict input validation and fail-fast behavior
+- mandatory explicit descriptions
+- idempotent behavior via decision-aligned guards
+- separation of public orchestration and private implementation
+
+Authentication and permissions are treated as explicit preconditions and are not handled here.
+
+.PARAMETER Intent
+Specifies the group intent category.
+
+Supported values:
+- LICENSE
+- ENTRAROLE
+
+This parameter determines which decision domain and validation rules are applied.
+
+.PARAMETER Principal
+Specifies the identity scope of the group.
+
+Supported values:
+- U – User principals
+- D – Device principals
+- X – Mixed principals (exceptional use only)
+
+.PARAMETER SkuPartNumber
+Specifies the license SKU part number.
+
+Required when Intent is LICENSE.
+Ignored for other intents.
+
+.PARAMETER RoleName
+Specifies the Entra ID directory role name.
+
+Required when Intent is ENTRAROLE.
+The role must exist in the tenant role definitions.
+
+.PARAMETER AssignmentType
+Specifies the role assignment type for ENTRAROLE groups.
+
+Supported values:
+- Eligible – PIM-protected role eligibility
+- Active   – Permanently active role assignment
+
+This parameter is mandatory when Intent is ENTRAROLE.
+
+.PARAMETER MaximumActivationHours
+Specifies the maximum activation duration (in hours) for Eligible PIM role assignments.
+
+Applicable only when:
+- Intent is ENTRAROLE
+- AssignmentType is Eligible
+
+.EXAMPLE
+New-MWEGroup -Intent LICENSE -Principal U -SkuPartNumber SPE_E5
+
+Creates a user-scoped security group named according to the enforced
+license taxonomy (for example: U-LICENSE-SPE_E5) and assigns the
+Microsoft 365 E5 license via group-based licensing.
+
+.EXAMPLE
+New-MWEGroup -Intent ENTRAROLE -Principal U -RoleName GlobalAdministrator -AssignmentType Eligible -MaximumActivationHours 9
+
+Creates a user-scoped Entra ID role group for the Global Administrator role
+with PIM-protected eligibility and a maximum activation duration of 9 hours.
+
+.NOTES
+- This function does not authenticate or request permissions.
+- Required Microsoft Graph permissions are treated as preconditions.
+- All errors are terminating and fail fast by design.
+- Group creation is performed exclusively by automation to prevent drift.
+
+.LINK
+DEC-0004 – Group taxonomy and naming rules  
+DEC-0005 – License distribution model  
+DEC-0006 – Group-based PIM for Entra ID roles  
+DEC-0007 – Module refactoring principles
 #>
-
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'LICENSE')]
     param (
-        [Parameter(Mandatory, ParameterSetName = 'LICENSE')]
-        [ValidateNotNullOrEmpty()]
+        #if we want to assign a license, this parameter tells the license name.
+        [Parameter(Mandatory, ParameterSetName='LICENSE')]
         [string]$SkuPartNumber,
 
+        #If we want to assign a liceense, this parameter tells is used to just create the group, but not assign the license. aka: we want to mock the license assignment because the lab only has one.
         [Parameter(ParameterSetName = 'LICENSE')]
         [switch]$Mock,
 
+        #If we want to assign an Entra role, this parameter tells the role name.
         [Parameter(Mandatory, ParameterSetName = 'ENTRAROLE')]
-        [ValidateNotNullOrEmpty()]
         [string]$RoleName,
 
+        #If we want to assign an Entra role, this parameter tells if we want to force the activation of the role before assignement, or we want to throw if thee role template is not activated.
         [Parameter(ParameterSetName = 'ENTRAROLE')]
         [switch]$Force,
 
+        #If we want to assign an Entra role, this parameter tells the assignment type.
         [Parameter(Mandatory, ParameterSetName = 'ENTRAROLE')]
         [ValidateSet('Active','Eligible')]
         [string]$AssignmentType,
 
+        #If we want to assign an Entra role, this parameter tells the maximum activation hours for eligible assignments.
         [Parameter(ParameterSetName = 'ENTRAROLE')]
-        [Int32]$MaximumActivationHours = 9
+        [Int32]$MaximumActivationHours
     )
+  $ErrorActionPreference = 'Stop'
+  $intent=$PSCmdlet.ParameterSetName
+  # Set default for MaximumActivationHours if not provided and AssignmentType is 'Eligible' according to DEC-0006
+  if ($intent -eq 'ENTRAROLE' -and
+	$AssignmentType -eq 'Eligible' -and
+	-not $PSBoundParameters.ContainsKey('MaximumActivationHours')
+) {
+	$MaximumActivationHours = 9
+	$PSBoundParameters['MaximumActivationHours'] = 9
+}
 
-    $parameterContext = Assert-MWEGroupParameters -ParameterSetName $PSCmdlet.ParameterSetName -SkuPartNumber $SkuPartNumber -Mock:$Mock -RoleName $RoleName -Force:$Force -MaximumActivationHours $MaximumActivationHours
-    $groupSplat = New-MWEGroupSplat -ParameterSetName $PSCmdlet.ParameterSetName -SkuPartNumber $SkuPartNumber -RoleName $RoleName -AssignmentType $AssignmentType
+  # Build parameter splat for Assert-MWEGroupParameters
+  $parameterValidationSplat = @{Intent = $intent}
+  if ($PSBoundParameters.ContainsKey('SkuPartNumber')) { $parameterValidationSplat.SkuPartNumber = $SkuPartNumber }
+  if ($PSBoundParameters.ContainsKey('Mock')) { $parameterValidationSplat.Mock = $Mock }
+  if ($PSBoundParameters.ContainsKey('RoleName')) { $parameterValidationSplat.RoleName = $RoleName }
+  if ($PSBoundParameters.ContainsKey('Force')) { $parameterValidationSplat.Force = $Force }
+  if ($PSBoundParameters.ContainsKey('AssignmentType')) { $parameterValidationSplat.AssignmentType = $AssignmentType }
+  if ($PSBoundParameters.ContainsKey('MaximumActivationHours')) { $parameterValidationSplat.MaximumActivationHours = $MaximumActivationHours }
 
-    $existingGroup = Get-MWEExistingGroup -ParameterSetName $PSCmdlet.ParameterSetName -SkuPartNumber $SkuPartNumber -RoleName $RoleName
-
-    if ($existingGroup) {
-        throw "Group '$($existingGroup.DisplayName)' already exists with Id: $($existingGroup.Id). Use that one."
-    }
-
-    $newGroup = $null
-
-    if ($PSCmdlet.ShouldProcess($groupSplat.DisplayName, 'Create group')) {
-        try {
-            $newGroup = New-MgGroup @groupSplat
-            Write-Verbose "Created new group with Id: $($newGroup.Id)"
+  # Populate additional parameters required for validation, creating variables for later use.
+  switch ($intent) {
+        'LICENSE' {
+          $subscribedSkuGetSplat = @{}
+          $AvailableSkus = Invoke-MWECommand -Command 'Get-MgSubscribedSku' -Splat $subscribedSkuGetSplat
+         
+          $parameterValidationSplat.AvailableSkuPartNumbers = $AvailableSkus.SkuPartNumber
         }
-        catch {
-            throw "Failed to create group '$($groupSplat.DisplayName)': $_"
-        }
-    }
+        'ENTRAROLE' {
+            $roleDefinitionsGetSplat = @{ All = $true }
+            $directoryRolesGetSplat = @{ All = $true }
+            $roleDefinitions = Invoke-MWECommand -Command 'Get-MgRoleManagementDirectoryRoleDefinition' -Splat $roleDefinitionsGetSplat
+            $directoryRoles = Invoke-MWECommand -Command 'Get-MgDirectoryRole' -Splat $directoryRolesGetSplat
 
-    if ($PSCmdlet.ParameterSetName -eq 'LICENSE' -and (-not $Mock)) {
-        if ($PSCmdlet.ShouldProcess("Assign license $SkuPartNumber to group $($groupSplat.DisplayName)")) {
-            $licenseSplat = @{
-                AddLicenses    = @(
-                    @{
-                        SkuId = (Get-MgSubscribedSku | Where-Object SkuPartNumber -eq $SkuPartNumber).SkuId
-                    }
-                )
-                RemoveLicenses = @()
-                GroupId        = $newGroup.Id
-            }
-
-            try {
-                Set-MgGroupLicense @licenseSplat
-                Write-Verbose "Assigned license $SkuPartNumber to group $($newGroup.DisplayName)"
-            }
-            catch {
-                throw "Failed to assign license '$SkuPartNumber' to group '$($newGroup.DisplayName)': $_"
-            }
+            $parameterValidationSplat.RoleDefinitionDisplayNames = $roleDefinitions.DisplayName
+            $parameterValidationSplat.DirectoryRoleDisplayNames = $directoryRoles.DisplayName
         }
     }
+    # Run parameter validation
+  Invoke-MWECommand -Command 'Assert-MWEGroupParameters' -Splat $parameterValidationSplat
 
-    if ($PSCmdlet.ParameterSetName -eq 'ENTRAROLE') {
+  # Build parameter splat for Assert-MWEExistingGroup
+  $groupExistenceValidationSplat= @{Intent = $intent}
+    switch ($intent) {
+        'LICENSE' {$groupExistenceValidationSplat.SkuPartNumber = $SkuPartNumber}
+        'ENTRAROLE' {$groupExistenceValidationSplat.RoleName = $RoleName}
+    }
+  # Run existing group validation
+  Invoke-MWECommand -Command 'Assert-MWEExistingGroup' -Splat $groupExistenceValidationSplat
 
-        # -Force handling: this is where tenant-level directory role instantiation (template -> role) happens when missing.
-        if (($RoleName -notin $parameterContext.ActivatedRoles.DisplayName) -and $Force) {
-            $template = $parameterContext.TemplateRoles | Where-Object DisplayName -eq $RoleName | Select-Object -First 1
-            if (-not $template) { throw "No such Entra directory role template: $RoleName" }
-            New-MgDirectoryRole -RoleTemplateId $template.Id
+    $newGroupSplat=@{Intent=$intent}
+
+    switch ($intent) {
+        'LICENSE' {
+            $newGroupSplat.SkuPartNumber = $SkuPartNumber
         }
-
-        $roleDef = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq '$RoleName'" | Select-Object -First 1
-        if (-not $roleDef) { throw "No such role definition found for role name: $RoleName" }
-
-        $policyAssignment = Get-MgPolicyRoleManagementPolicyAssignment -Filter "scopeId eq '/' and scopeType eq 'DirectoryRole' and roleDefinitionId eq '$($roleDef.Id)'" | Select-Object -First 1
-        if (-not $policyAssignment) { throw "No role management policy assignment found for roleDefinitionId '$($roleDef.Id)' (scope '/')." }
-
-        $rule = Get-MgPolicyRoleManagementPolicyRule -UnifiedRoleManagementPolicyId $policyAssignment.PolicyId | Where-Object Id -eq 'Expiration_EndUser_Assignment' | Select-Object -First 1
-        if (-not $rule) { throw "Role management policy rule 'Expiration_EndUser_Assignment' not found for PolicyId '$($policyAssignment.PolicyId)'." }
-
-        $whatIfMessage = if ($AssignmentType -eq 'Active') {
-            "Assign role $RoleName as $AssignmentType to group $($newGroup.DisplayName)"
-        } else {
-            "Assign role $RoleName as $AssignmentType to group $($newGroup.DisplayName) with max activation hours: $MaximumActivationHours"
-        }
-
-        if ($PSCmdlet.ShouldProcess($whatIfMessage)) {
-
-            Update-MgPolicyRoleManagementPolicyRule -UnifiedRoleManagementPolicyId $policyAssignment.PolicyId -UnifiedRoleManagementPolicyRuleId $rule.Id -BodyParameter @{
-                '@odata.type'        = '#microsoft.graph.unifiedRoleManagementPolicyExpirationRule'
-                isExpirationRequired = $true
-                maximumDuration      = "PT$($MaximumActivationHours)H"
-            }
-
-            if ($AssignmentType -eq 'Active') {
-                $activeAssignSplat = @{
-                    action           = 'adminAssign'
-                    principalId      = $newGroup.Id
-                    roleDefinitionId = $roleDef.Id
-                    directoryScopeId = '/'
-                    justification    = 'LAB justification. In prod I would ask a ticket number with a parameeeter to fill this.'
-                    scheduleInfo     = @{
-                        startDateTime = (Get-Date).ToString('o')
-                        expiration    = @{
-                            type     = 'afterDuration'
-                            duration = "PT$($MaximumActivationHours)H"
-                        }
-                    }
-                }
-
-                Invoke-NWEWithLazyProperty -ErrorId 'SubjectNotFound' -ScriptBlock {
-                    New-MgRoleManagementDirectoryRoleAssignmentScheduleRequest -BodyParameter $activeAssignSplat
-                } | Out-Null
-            }
-
-            if ($AssignmentType -eq 'Eligible') {
-                $eligibleAssignSplat = @{
-                    action           = 'adminAssign'
-                    principalId      = $newGroup.Id
-                    roleDefinitionId = $roleDef.Id
-                    directoryScopeId = '/'
-                    justification    = 'LAB justification. In prod I would ask a ticket number with a parameeeter to fill this.'
-                    scheduleInfo     = @{
-                        startDateTime = (Get-Date).ToString('o')
-                        expiration    = @{
-                            type = 'noExpiration'
-                        }
-                    }
-                }
-
-                Invoke-NWEWithLazyProperty -ErrorId 'SubjectNotFound' -ScriptBlock {
-                    New-MgRoleManagementDirectoryRoleEligibilityScheduleRequest -BodyParameter $eligibleAssignSplat
-                } | Out-Null
-            }
+        'ENTRAROLE' {
+            $newGroupSplat.RoleName = $RoleName
+            $newGroupSplat.AssignmentType = $AssignmentType
         }
     }
+    $newGroup = Invoke-MWECommand -Command 'New-MWEGroupResource' -Splat $newGroupSplat
 
-    return $newGroup
+    switch ($intent) {
+      'LICENSE' {
+        if (-not $Mock) {
+          $licenseAssignmentSplat=@{GroupId=$newGroup.Id; SkuPartNumber=$SkuPartNumber}
+          Invoke-MWECommand -Command 'Set-MWEGroupLicenseAssignment' -Splat $licenseAssignmentSplat 
+        }
+      }
+      'ENTRAROLE' {
+        $roleAssignmentSplat=@{
+          GroupId = $newGroup.Id
+          RoleName = $RoleName
+          AssignmentType = $AssignmentType
+          RoleDefinitions = $roleDefinitions
+          DirectoryRoles = $directoryRoles
+        }
+        if ($PSBoundParameters.ContainsKey('MaximumActivationHours')) { $roleAssignmentSplat.MaximumActivationHours = $MaximumActivationHours }
+        if ($PSBoundParameters.ContainsKey('Force')) { $roleAssignmentSplat.Force = $Force }
+        Invoke-MWECommand -Command 'Set-MWEGroupEntraRoleAssignment' -Splat $roleAssignmentSplat
+      }
+    }
 }

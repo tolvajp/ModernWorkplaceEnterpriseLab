@@ -17,7 +17,6 @@
     {
       "RoleName": "Security Reader",
       "AssignmentType": "Active",
-      "MaximumActivationHours": 2,
       "Force": true
     },
     {
@@ -35,7 +34,6 @@
     {
       "RoleName": "Directory Readers",
       "AssignmentType": "Active",
-      "MaximumActivationHours": 2,
       "Force": true
     },
     {

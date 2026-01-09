@@ -1,6 +1,6 @@
 @{
     RootModule        = 'MWE.psm1'
-    ModuleVersion     = '0.1.0'
+    ModuleVersion     = '0.1.1'
     CompatiblePSEditions = @('Core')
     PowerShellVersion = '7.2'
 
