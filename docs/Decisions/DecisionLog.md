@@ -25,8 +25,9 @@ The decision folders are the **source of truth**.
 | DEC-0003 | Introduce custom domain for lab identities | Accepted | 2025-12-24 | Peter Tolvaj |
 | DEC-0004 | Define group taxonomy and naming rules | Accepted | 2025-12-28 | Peter Tolvaj |
 | DEC-0005 | Define license distribution model using group-based licensing | Accepted | 2025-12-29 | Peter Tolvaj |
-| DEC-0006 | Group-based Privileged Identity Management (PIM) for Entra ID Roles | Accepted | 2025-01-09 | Peter Tolvaj |
-| DEC-0007 | Module refactoring  | Accepted | 2025-01-02 | Peter Tolvaj |
+| DEC-0006 | Group-based Privileged Identity Management (PIM) for Entra ID Roles | Accepted | 2025-12-29 | Peter Tolvaj |
+| DEC-0007 | Module refactoring  | Accepted | 2025-01-09 | Peter Tolvaj |
+| DEC-0008 | Authentication Baseline: MFA Model  | Accepted | 2025-01-10 | Peter Tolvaj |
 
 ---
 
