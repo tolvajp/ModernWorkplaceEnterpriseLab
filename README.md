@@ -157,26 +157,24 @@ Passing a formal **change review** process is **not** a goal of this repository.
 
 ## Repository structure
 
-.
-├── README.md
-└── docs/
-    ├── ScopeAndAssumptions.md
-    ├── ArchiteturalOverview.md
-    ├── ThreatModelLite.md
-    ├── roadmap.md
-    ├── CodingConventions.md
-    └── Decisions/
-        ├── DecisionLog.md
-        ├── DEC-XXXX/
-        │   ├── DEC-XXXX.md
-        │   ├── RNB-XXXX.md
-        │   ├── RNB-XXXX.json
-        │   ├── SCR-XXXX.ps1
-        │   └── artifacts/
-        └── DEC-TEMP/
-            ├── DEC-TEMP.md
-            ├── RNB-TEMP.md
-            ├── SCR-TEMP.md
+- `README.md`, `LICENSE`
+- `docs/` — documentation and decision records
+  - Core docs: `ScopeAndAssumptions.md`, `ArchitecturalOverview.md`, `ThreatModelLite.md`, `roadmap.md`, `CodingConventions.md`
+  - `docs/Decisions/`
+    - `DecisionLog.md` — index of decisions
+    - `DEC-XXXX/` — one decision domain folder
+      - `DEC-XXXX.md` — decision record
+      - `RNB-XXXX.md` / `RNB-XXXX.json` — runbook (human / config)
+      - `SCR-XXXX*.ps1` — supporting scripts (optional)
+      - `VAL-XXXX*.ps1` / `VAL-XXXX*.json` — validation (optional)
+      - `artifacts/` — decision assets (optional)
+  - `docs/Templates/` — templates for new decisions and PowerShell assets
+- `src/` — source code
+  - `src/PSmodules/MWE/` — PowerShell module
+    - `MWE.psd1`, `MWE.psm1`
+    - `Private/` — internal helper functions (not exported)
+    - `Tests/` — Pester v5 tests
+    - `*.ps1` — public exported functions
 
 ---
 
