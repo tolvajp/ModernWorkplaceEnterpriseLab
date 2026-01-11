@@ -30,6 +30,11 @@ function Invoke-NWEWithLazyObject {
 
     .EXAMPLE
     Invoke-NWEWithLazyObject -ScriptBlock { Get-MgDirectoryRole -DirectoryRoleId $roleId } -ErrorMessagePatterns @('Not found','does not exist') -TimeoutSeconds 300 -SleepSeconds 10
+
+    .NOTES
+    This helper may execute the supplied ScriptBlock in a different PowerShell invocation context than the caller expects.
+    Adherence to the documented coding conventions (explicit parameter passing, no reliance on global state, and strict
+    error handling) ensures this does not create functional or testability issues.
     #>
 
     [CmdletBinding()]

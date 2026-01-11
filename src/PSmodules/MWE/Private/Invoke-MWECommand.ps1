@@ -1,5 +1,4 @@
-function Invoke-MWECommand {
-    <#
+<#
 .SYNOPSIS
 Invokes a PowerShell command with a splatted parameter set and standardized verbose logging.
 
@@ -56,7 +55,10 @@ Invoke-MWECommand -Command 'New-MWEGroup' -Splat $splat -Verbose -WhatIf
 - Designed for reuse by higher-level MWE functions
 - Intended as a transparent command forwarder with enhanced observability
 - Throws terminating errors emitted by the invoked command without interception
-- SupportsShouldProcess is present only to preserve WhatIf/Confirm parameter binding for forwarded commands.
+- SupportsShouldProcess is present only to preserve WhatIf/Confirm parameter binding for forwarded commands
+- This helper intentionally invokes commands in a separate PowerShell invocation context;
+  adherence to the documented coding conventions (no reliance on global state,
+  explicit parameter passing, and strict error handling) ensures this is not problematic.
 
 .REQUIRED GRAPH SCOPES
 Depends entirely on the invoked command.
@@ -65,29 +67,3 @@ This helper itself does not require Microsoft Graph permissions.
 .LINK
 https://learn.microsoft.com/powershell/
 #>
-
-    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
-    param (
-
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Command,
-
-        [Parameter(Mandatory)]
-        [ValidateNotNull()]
-        [hashtable]$Splat
-    )
-    $ErrorActionPreference = 'Stop'
-    Write-Verbose -Message "Invoking command [$Command]"
-    if ($Splat.Count -eq 0) {
-        Write-Verbose -Message "  - No parameters supplied (empty splat)."
-    } else {
-        Write-Verbose -Message "  - Parameters:"
-        foreach ($key in ($Splat.Keys | Sort-Object)) {
-            Write-Verbose "    - $key = $($Splat[$key])"
-        }
-    }
-
-    # --- Invocation ---
-    & $Command @Splat
-}

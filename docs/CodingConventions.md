@@ -27,7 +27,10 @@
 9. **Secrets and Permissions**  
    Secrets are never stored or passed in code; missing permissions or scopes result in immediate terminating errors.
 
-10. **Help and Test Coverage**  
+10. **Process Isolation and Communication Boundaries**  
+    Commands and functions communicate **only through explicit parameters and standard output streams**.
+
+11. **Help and Test Coverage**  
     Every public function includes comment-based help with at least one example and is covered by Pester tests.
 
 Further architectural intent and rationale for these rules are defined in **DEC-0007**.
