@@ -28,6 +28,7 @@ The decision folders are the **source of truth**.
 | DEC-0006 | Group-based Privileged Identity Management (PIM) for Entra ID Roles | Accepted | 2025-12-29 | Peter Tolvaj |
 | DEC-0007 | Module refactoring  | Accepted | 2025-01-09 | Peter Tolvaj |
 | DEC-0008 | Authentication Baseline: MFA Model  | Accepted | 2025-01-10 | Peter Tolvaj |
+| DEC-0009 | Conditional Access Model  | Accepted | 2025-01-10 | Peter Tolvaj |
 
 ---
 
