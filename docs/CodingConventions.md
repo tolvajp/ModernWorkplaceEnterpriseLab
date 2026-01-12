@@ -30,4 +30,7 @@
 10. **Help and Test Coverage**  
     Every public function includes comment-based help with at least one example and is covered by Pester tests.
 
+11. **Standardized Communication Only**  
+   Functions communicate exclusively via parameters and standard PowerShell streams (output, error, verbose, information); global variables, shared state, and implicit side channels are forbidden.
+
 Further architectural intent and rationale for these rules are defined in **DEC-0007**.
