@@ -21,7 +21,7 @@ Without decisions implementation is just clicking — not an engineering demonst
 
 The goal of powershell module is to **enforce decisions and automate repeteable tasks**.
 
-Suggested way to consumme in strict timeframe: Check one or two scipts, and check the current related policies if I enforce something.
+**Suggested way to consumme in strict timeframe: Check one or two scipts, and check the current folder for related policies for the domain.**
 
 ---
 
@@ -42,7 +42,7 @@ This part of the repository exists to demonstrate:
 - where I draw boundaries,
 - and what I intentionally leave out.
 
-Suggested way to consume in strict time frame: Check one or two decision domain, select one or two atomic decision, and check it in the decision files for consistency, reasoning, scope, etc.
+**Suggested way to consume in strict time frame: Check one or two decision domain, select one or two atomic decision, and check it in the decision files for consistency, reasoning, scope, etc.**
 
 ## 3. Runbooks
 
@@ -50,7 +50,7 @@ Suggested way to consume in strict time frame: Check one or two decision domain,
 
 If the runbooks are executed **in order**, and tenant-specific values (e.g. domain names, identifiers) are adjusted, the result is a a copy of my tenant.
 
-Suggested way to consume in strict time frame: cheeck one or two runbooks.
+**Suggested way to consume in strict time frame: cheeck one or two runbooks.**
 
 ---
 
