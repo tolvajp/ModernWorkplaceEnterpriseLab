@@ -3,7 +3,7 @@
 
 ## What this repository contains
 
-This repository contains **two primary outputs**.
+This repository contains **three primary outputs**.
 
 They are related, but can be consumed independently.
 
@@ -11,41 +11,46 @@ They are related, but can be consumed independently.
 
 ## 1. PowerShell automation module
 
-The first deliverable is a **PowerShell module** that automates operational tasks
+The main deliverable is a **PowerShell module** that automates operational tasks
 and **enforces explicit architectural decisions**.
 
 - The **scripts** show how I handle automation.
-- The **Decision Log and Decision records (DEC)** explain *why* those areas are automated
-  and *which rules the scripts must enforce*.
+- Decision current state shows what decisions are enforced by the PowerShell module.
 
-Without decisions and documented reasoning,
-implementation is just clicking —
-not an engineering demonstration.
+Without decisions implementation is just clicking — not an engineering demonstration.
 
-Scripts in this lab exist to **enforce decisions** and to automate tasks, not to replace them.
+The goal of powershell module is to **enforce decisions and automate repeteable tasks**.
+
+Suggested way to consumme in strict timeframe: Check one or two scipts, and check the current related policies if I enforce something.
 
 ---
 
 ## 2. Decision model and lab build path
 
 The second deliverable is a **documented decision model** that demonstrates
-my **architectural thinking and reasoning process — including its limits**
-I don't want to pose as an architect, it is just my level of understanding.
+my **architectural thinking, reasoning process and docummentation capabilities**
 
-- The **Decision Log** describes the covered domains and intended outcomes.
-- **Decision records (DEC)** describe what problems are being solved and why.
-- **Runbooks (RNB)** describe how those decisions are applied in practice.
+My goal is not to pose as an architect, but without documented decisions I don't see the point of the lab.
 
-If the runbooks are executed **in order**, and tenant-specific values
-(e.g. domain names, identifiers) are adjusted,
-the result is a **working (but intentionally incomplete) lab environment**
-that reflects the documented decisions.
+- \docs\current shows the current state of the policies I apply with the implementation, enforce with the PowerShell Module.  
+- The **Decision records (DEC)** describes the history of the decisions, contex, and reasoning. If all applied in series it leads to current docs.
+- **DecisionLog.md** is an index of the decisions for easier search.
 
 This part of the repository exists to demonstrate:
 - how I structure problems,
 - how I define constraints,
 - where I draw boundaries,
 - and what I intentionally leave out.
+
+Suggested way to consume in strict time frame: Check one or two decision domain, select one or two atomic decision, and check it in the decision files for consistency, reasoning, scope, etc.
+
+## 3. Runbooks
+
+**Runbooks (RNB)** describe how those decisions are applied in practice, logs every change in the tenant.
+
+If the runbooks are executed **in order**, and tenant-specific values (e.g. domain names, identifiers) are adjusted, the result is a a copy of my tenant.
+
+Suggested way to consume in strict time frame: cheeck one or two runbooks.
 
 ---
 
@@ -55,8 +60,7 @@ This part of the repository exists to demonstrate:
 - Built and maintained by a **single engineer**
 - Decisions prioritise **explicit reasoning and traceability**
 
-This repository demonstrates **how I think and automate**,
-not a finished enterprise blueprint.
+This repository demonstrates **how I think and automate**, not a finished enterprise blueprint.
 
 ---
 
