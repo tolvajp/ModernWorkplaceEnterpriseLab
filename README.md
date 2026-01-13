@@ -22,7 +22,7 @@ Without decisions, implementation is just clicking — not an engineering demons
 The goal of the PowerShell module is to **enforce decisions and automate repeatable tasks**.
 
 Suggested way to consume in a strict timeframe:  
-Check one or two scripts, and review the related current state policies to see what is enforced.
+Check one or two scripts, related pester tests, and review the related current state policies to see what is enforced.
 
 ---
 
