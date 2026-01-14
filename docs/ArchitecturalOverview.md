@@ -13,5 +13,4 @@ Implementation exists to enforce decisions, not the other way around.
 - Automation (PowerShell module)
 - Validation (Pester tests)
 
-Architecture evolves by adding or superseding decisions,
-not by ad-hoc refactoring.
+Architecture evolves by adding or superseding decisions, not by ad-hoc refactoring.

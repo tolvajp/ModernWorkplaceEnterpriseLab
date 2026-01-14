@@ -20,6 +20,7 @@ This function:
 - Does not gate execution via ShouldProcess
 - Preserves the invoked command's output and pipeline behavior
 - Does not use Invoke-Expression or AST manipulation
+- Supports WhatIf / Confirm semantics for forwarded commands
 
 .PARAMETER Command
 The name of the PowerShell command to invoke.
