@@ -1,107 +1,114 @@
-# Current State – License Distribution Model
-
-This document represents the effective atomic decisions for the License distribution model
-decision domain.
-
-This document is purely declarative and contains no context, reasoning, or alternatives.
-For rationale and background, consult the referenced decision files.
-
----
-
-## Derived From
-- DEC-0005
-
----
-
-## Decisions
-
-Atomic decision: 
-All license assignments are performed exclusively via group-based licensing.  
+**Decision**  
+All license assignments are performed **exclusively via group-based licensing**.  
 Direct user license assignment is not permitted.
-Source: DEC-0005/Atomic decision 1
+
+source: DEC-0005/1
 
 ---
 
-Atomic decision:
-License groups are implemented as Security groups with static membership.
-Source: DEC-0005/Atomic decision 2
+**Decision**  
+License groups are implemented as **Security groups** with **static membership**.
+
+Source: DEC-0005/2
 
 ---
 
-Atomic decision: 
-Each license group represents one license intent.
-Source: DEC-0005/Atomic decision 3
+**Decision**  
+Each license group represents **one license intent**.
+
+Source: DEC-0005/3
 
 ---
 
-Atomic decision: 
-This lab uses Microsoft 365 E5 as the only implemented license SKU.
-Source: DEC-0005/Atomic decision 4
+**Decision**  
+This lab uses **Microsoft 365 E5 as the only implemented license SKU**.
+
+Source: DEC-0005/4
 
 ---
 
-Atomic decision: 
-Add-on licenses are treated identically to baseline licenses and are modeled as standard license groups (LIC).
-Source: DEC-0005/Atomic decision 5
+**Decision**  
+Add-on licenses are treated identically to baseline licenses and are modeled as standard license groups (`LIC`).
+
+Source: DEC-0005/5
+Comment: Violated. has to make new decision to overwritee this rule. The license gropups are implemented as `U-LICENSE` instead of `U-LIC`.
 
 ---
 
-Atomic decision: 
+**Decision**  
 Personas do not receive licenses directly.  
-Licenses are always derived from group membership.
-Source: DEC-0005/Atomic decision 6
+Licenses are always derived from **group membership**.
+
+Source: DEC-0005/6
 
 ---
 
-Atomic decision: 
-Administrative accounts are not licensed by default.  
+**Decision**  
+Administrative accounts are **not licensed by default**.
 
-If licensing becomes strictly necessary, Microsoft 365 E5 is used.
-Source: DEC-0005/Atomic decision 7
+If licensing becomes strictly necessary, **Microsoft 365 E5** is used.
+
+Source: DEC-0005/7
 
 ---
 
-Atomic decision: 
+**Decision**  
 No license conflict resolution logic is implemented in this lab.
-Source: DEC-0005/Atomic decision 8
+
+Source: DEC-0005/8
 
 ---
 
-Atomic decision: 
+**Decision**  
 All license groups follow the naming convention:
+
+```
 U-LICENSE-<SKU>
+```
 Examle: U-LICENSE-SPE_E5
-Source: DEC-0005/Atomic decision 9
+
+Source: DEC-0005/9
 
 ---
 
-Atomic decision: 
-License groups use default tenant ownership in this lab.
-Source: DEC-0005/Atomic decision 10
+### Atomic Decision 10 – Ownership model
+
+**Decision**  
+License groups use **default tenant ownership** in this lab.
+
+Source: DEC-0005/10
 
 ---
 
-Atomic decision: 
-License group creation and validation are automated using Graph PowerShell.
+**Decision**  
+License group creation and validation are automated using **Graph PowerShell**.
 
-The test suite New-MWEGroup.tests.ps1 must be updated to represent the decisions made in this document.
-Source: DEC-0005/Atomic decision 11
+The test suite `New-MWEGroup.tests.ps1` must be updated to represent the decisions made in this document.
 
----
+Source: DEC-0005/11
 
-Atomic decision: 
-Group membership is the single source of truth.
-Source: DEC-0005/Atomic decision 12
+**Decision**  
+Group membership is the **single source of truth**.
 
----
-
-Atomic decision: 
-Group-based licensing is chosen partly for operational transparency.
-Source: DEC-0005/Atomic decision 13
+Source: DEC-0005/12
 
 ---
 
-Atomic decision: Current validation is limited to:
+**Decision**  
+Group-based licensing is chosen partly for **operational transparency**.
+
+Source: DEC-0005/13
+
+Comment: has to be removed. This is reasoning, not decision.
+
+---
+
+**Decision**  
+Current validation is limited to:
 - Group existence
 - Naming convention correctness
-Source: DEC-0005/Atomic decision 14
+
+Source: DEC-0005/14
+
+Comment: This is for the runbook script, not for the security domain. Has to be removed.
+
