@@ -1,0 +1,24 @@
+{
+  "Auth": {
+    "Scopes": [
+      "Policy.ReadWrite.AuthenticationMethod"
+    ]
+  },
+  "PolicyStates" : [
+    {"AuthenticationMethodConfigurationId" : "sms",
+     "State" : "disabled"},
+    {"AuthenticationMethodConfigurationId" : "voice",
+     "State" : "disabled"},
+     {"AuthenticationMethodConfigurationId" : "email",
+     "State" : "disabled"},
+     {"AuthenticationMethodConfigurationId" : "fido2",
+     "State" : "enabled"},
+     {"AuthenticationMethodConfigurationId" : "windowsHelloForBusiness",
+     "State" : "enabled"},
+     {"AuthenticationMethodConfigurationId" : "microsoftAuthenticator",
+     "State" : "enabled"},
+     {"AuthenticationMethodConfigurationId" : "temporaryAccessPass",
+     "State" : "enabled"}
+  
+  ] 
+}
