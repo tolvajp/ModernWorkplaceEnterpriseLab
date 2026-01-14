@@ -2,7 +2,7 @@
 MFA is a **baseline requirement** for all **interactive** sign-ins.
 It is not optional and not risk-triggered.
 
-Source: DEC-0008/1
+Source: DEC-0013/1
 
 ---
 
@@ -11,7 +11,7 @@ MFA applies to **all interactive user identities**, including:
 - standard user accounts
 - dedicated administrative accounts
 
-Source: DEC-0008/2
+Source: DEC-0013/2
 
 ---
 
@@ -52,7 +52,7 @@ strength of factor binding, and suitability for different identity risk levels.
 - Email OTP  
 - Any MFA method based solely on shared secrets  
 
-Source: DEC-0008/3
+Source: DEC-0013/3
 
 ---
 
@@ -71,7 +71,7 @@ Standard user identities:
 - may use **Category A or Category B** MFA methods
 - must not use Category C MFA methods
 
-Source: DEC-0008/4
+Source: DEC-0013/4
 
 ---
 
@@ -81,14 +81,14 @@ Device context may be considered an **input signal** but **cannot replace** MFA.
 - For standard users, device context may influence *how* MFA is satisfied
 - For administrative users, device context must never reduce MFA requirements
 
-Source: DEC-0008/5
+Source: DEC-0013/5
 
 ---
 
 **Decision**  
 Missing, unknown, or unreliable device context is treated as **untrusted**.
 
-Source: DEC-0008/6
+Source: DEC-0013/6
 
 ---
 
@@ -99,7 +99,7 @@ to the MFA baseline.
 - MFA is not required for break-glass accounts
 - These accounts exist solely for recovery scenarios
 
-Source: DEC-0008/7
+Source: DEC-0013/7
 
 ---
 
@@ -107,7 +107,7 @@ Source: DEC-0008/7
 Phishing-resistant authentication methods that use **multiple independent
 factors** are treated as **MFA satisfied**.
 
-Source: DEC-0008/8
+Source: DEC-0013/8
 
 ---
 
@@ -115,7 +115,7 @@ Source: DEC-0008/8
 Passwordless methods that use multiple independent factors satisfy MFA
 requirements without additional steps.
 
-Source: DEC-0008/9
+Source: DEC-0013/9
 
 ---
 
@@ -123,7 +123,7 @@ Source: DEC-0008/9
 Legacy authentication is incompatible with the MFA baseline and is disallowed
 by default.
 
-Source: DEC-0008/10
+Source: DEC-0013/10
 
 ---
 
@@ -149,4 +149,4 @@ decision domain.
 - Break-glass identities are represented by a **static, manually governed group**
 - Service and workload identities are **out of scope** and not subject to MFA
 
-Source: DEC-0008/11
+Source: DEC-0013/11

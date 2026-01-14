@@ -6,4 +6,4 @@ Microsoft 365 E5 provides a comprehensive entitlement set covering:
 - Endpoint management and security
 - Compliance and advanced security features
 
-Source: DEC-0001/1
+Source: DEC-0002/1

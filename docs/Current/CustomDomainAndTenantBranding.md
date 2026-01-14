@@ -6,4 +6,4 @@ Introduce a custom domain and tenant-level branding to standardize identity pres
 
 All new identities and user-facing authentication screens will follow this baseline going forward.
 
-Source: DEC-0003/1
+Source: DEC-0005/1

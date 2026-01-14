@@ -3,7 +3,7 @@
 - **No Entra role is ever assigned directly to a user**.
 - This rule applies strictly to **non-expiring (baseline) role eligibility or activation**.
 
-source: DEC-0006/1
+source: DEC-0010/1
 
 **Decision**
 
@@ -23,7 +23,7 @@ source: DEC-0006/1
 - Monitoring and SIEM integration
 - BreakGlass Accounts
 
-Source: DEC-0006/2
+Source: DEC-0010/2
 Comment: Has to be removed. This is scope, not decision.
 
 ---
@@ -33,7 +33,7 @@ Comment: Has to be removed. This is scope, not decision.
 - A group is bound to **either** an *Eligible* **or** an *Active* assignment — never both
 - For each role, an explicit decision is made whether it is eligible (PIM-protected) or permanently active
 
-Source: DEC-0006/3
+Source: DEC-0010/3
 
 ---
 
@@ -42,7 +42,7 @@ Source: DEC-0006/3
 - Group membership **never grants immediate privilege** unless the role is explicitly defined as Active
 - PIM activation is mandatory to transition from eligibility to effective privilege
 
-Source: DEC-0006/4
+Source: DEC-0010/4
 
 ---
 
@@ -55,7 +55,7 @@ Source: DEC-0006/4
 - Membership changes should require approval
 - Separation of duties between role eligibility management and role usage should be enforced
 
-Source: DEC-0006/5
+Source: DEC-0010/5
 
 ---
 
@@ -65,7 +65,7 @@ Source: DEC-0006/5
   - The user still requires the role
   - The role still aligns with the user’s responsibilities
 
-Source: DEC-0006/6
+Source: DEC-0010/6
 
   ---
 
@@ -77,7 +77,7 @@ Source: DEC-0006/6
 Dynamic group membership introduces implicit, attribute-driven privilege changes that are difficult to reason about and audit.  
 Static security groups preserve deterministic behavior and make privilege state explicit.
 
-Source: DEC-0006/7
+Source: DEC-0010/7
 
 ---
 
@@ -93,4 +93,4 @@ Rules:
 - Exactly one state (ELIGIBLE or ACTIVE)
 - Naming must fully describe role and privilege state
 
-Source: DEC-0006/8
+Source: DEC-0010/8

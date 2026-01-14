@@ -1,6 +1,12 @@
 # Modern Workplace Enterprise Lab
 **Identity • Endpoint Lifecycle • Security • Automation**
 
+## Goal of this repository
+
+This repository exists to support my CV by making my technical work and decisions visible.
+LinkedIn profile: https://www.linkedin.com/in/petertolvaj/
+
+
 ## What this repository contains
 
 This repository contains **three primary outputs**.
@@ -50,9 +56,9 @@ Check one or two decision domains, then review the source decision file for cont
 
 ## 3. Runbooks
 
-**Runbooks (RNB)** describe how those decisions are applied in practice and log every change in the tenant.
+**Runbooks (RNB)** under `\docs\Runbooks`  describe how those decisions are applied in practice and log every change in the tenant.
 
-If the runbooks are executed **in order**, and tenant-specific values (e.g. domain names, identifiers) are adjusted, the result is a copy of my tenant.
+If the runbooks are executed **in order**, and tenant-specific values (e.g. domain names, identifiers) are adjusted, the result is a close functional copy of my tenant.
 
 Suggested way to consume in a strict timeframe:  
 Check one or two runbooks.
