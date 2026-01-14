@@ -1,56 +1,72 @@
-# Current State – Group Taxonomy and Naming Rules
+**Decision**  
+All managed group names follow the structure:
 
-This document represents the effective atomic decisions for the Group taxonomy and naming rules
-decision domain.
+`<Principal>-<Function>-<Specifier>-<Specifier>-...`
 
-This document is purely declarative and contains no context, reasoning, or alternatives.
-For rationale and background, consult the referenced decision files.
+Where:
+- `Principal` is exactly one of:
+  - `U` – user principals
+  - `D` – device principals
+  - `X` – mixed principals (exceptional use only)
+- `Function` expresses the high-level intent of the group
+- One or more `Specifier` tokens qualify the function
 
----
+At least one `Specifier` token is mandatory.
 
-## Derived From
-- DEC-0004
-
----
-
-## Decisions
-
-Atomic decision: 
-All managed group names follow a tokenized, extensible structure
-Source: DEC-0004/Atomic decision 1
+Source: DEC-0004/1
 
 ---
 
-Atomic decision: 
-Allowed characters are explicitly defined
-Source: DEC-0004/Atomic decision 2
+**Decision**  
+Only the following characters are allowed in group names:
+
+- A–Z  
+- a–z  
+- 0–9  
+- `-`  
+- `_`
+
+Any other character is invalid.
+
+source: DEC-0004/2
 
 ---
 
-Atomic decision: 
-Whitespace and disallowed characters are removed
-Source: DEC-0004/Atomic decision 3
+**Decision**  
+Whitespace and any character outside the allowed set (A–Z a–z 0–9 - _) are automatically removed
+during group name generation.
+
+Source: DEC-0004/3
 
 ---
 
-Atomic decision: 
-`mailNickname` equals the normalized group name. It should not be longer than 64 char.
-Source: DEC-0004/Atomic decision 4
+**Decision**  
+The `mailNickname` property is set to exactly the same value as the normalized group name.
+It should not be longer than 64 character
+
+Source: DEC-0004/4
+
+----
+
+**Decision**  
+Every managed group must have a non-empty, human-readable description that clearly states
+the group’s intended purpose.
+
+
+Source: DEC-0004/5
 
 ---
 
-Atomic decision: 
-Group descriptions are mandatory and explicit
-Source: DEC-0004/Atomic decision 5
+**Decision**  
+All managed groups are created exclusively by automation scripts.
+Manual creation of managed groups is not permitted.
+
+Source: DEC-0004/6
 
 ---
 
-Atomic decision: 
-Managed groups are created exclusively by automation
-Source: DEC-0004/Atomic decision 6
+**Decision**  
+The group creation logic must be modular so that new group functions or rules
+can be added with minimal refactoring existing behaviour.
 
----
-
-Atomic decision: 
-Group creation logic must be modular and extensible
-Source: DEC-0004/Atomic decision 7
+Source: DEC-0004/7
