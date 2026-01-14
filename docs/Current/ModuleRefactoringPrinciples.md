@@ -20,7 +20,7 @@ A function is considered complete when all of the following are true:
 - Supports `-WhatIf` / `ShouldProcess` semantics where the operation results in
   state changes
 
-Source: DEC-0007/1
+Source: DEC-0012/1
 
   ---
 
@@ -30,7 +30,7 @@ Public functions represent **operational domains** of the module.
 Internal implementation details are encapsulated in non-exported helper
 functions and may evolve freely.
 
-Source: DEC-0007/2
+Source: DEC-0012/2
 
 ---
 
@@ -40,7 +40,7 @@ Internal refactoring is explicitly allowed and expected as the module evolves.
 Public function contracts are treated as stable and intentional.
 Any breaking change to a public contract must be reflected through versioning.
 
-Source: DEC-0007/3
+Source: DEC-0012/3
 
 ---
 
@@ -50,7 +50,7 @@ The module does not read configuration files or parse external data formats.
 All required input is provided via parameters or structured objects supplied by
 the caller.
 
-Source: DEC-0007/4
+Source: DEC-0012/4
 
 ---
 
@@ -64,7 +64,7 @@ Approved output mechanisms are:
 - `Write-Warning`
 - `Write-Error`
 
-Source: DEC-0007/5
+Source: DEC-0012/5
 
 ---
 
@@ -90,7 +90,7 @@ Verb naming is normative in this module: the verb defines the behavioural contra
 
 Any introduction of a new verb must be documented and maintained in the Coding Conventions.
 
-Source: DEC-0007/6
+Source: DEC-0012/6
 
 ---
 
@@ -103,7 +103,7 @@ Required permissions and scopes are treated as preconditions.
 
 If required permissions are missing, functions terminate immediately.
 
-Source: DEC-0007/7
+Source: DEC-0012/7
 
 ---
 
@@ -115,7 +115,7 @@ Secrets and passwords are not permitted anywhere in the module.
 - No password material in code, configuration, examples, comments, or test data.
 - If a secret is required operationally, it MUST be supplied externally by the caller via an approved secure mechanism.
 
-Source: DEC-0007/8
+Source: DEC-0012/8
 
 ---
 
@@ -126,7 +126,7 @@ The entire module MUST be covered by automated Pester tests.
 - Tests MUST be runnable in CI and locally.
 - New or changed functionality MUST include corresponding test updates.
 
-Source: DEC-0007/9
+Source: DEC-0012/9
 
 ---
 
@@ -137,7 +137,7 @@ All public functions and parameters follow strict naming conventions:
 - Function names and parameter names use **PascalCase**.
 - Local variables use **camelCase**.
 
-Source: DEC-0007/10
+Source: DEC-0012/10
 
 ---
 
@@ -147,7 +147,7 @@ The module enforces terminating errors by default.
 - The module sets `$ErrorActionPreference = 'Stop'` at each public and helper function.
 - Errors MUST NOT be silently ignored, downgraded, or suppressed.
 
-Source: DEC-0007/11
+Source: DEC-0012/11
 
 ---
 
@@ -157,7 +157,7 @@ All functions require only the minimum necessary Graph/API permissions.
 - Required permissions/scopes are treated as explicit preconditions of each function.
 - Functions MUST NOT request broader scopes than necessary to perform their operation.
 
-Source: DEC-0007/12
+Source: DEC-0012/12
 
 ---
 
@@ -173,7 +173,7 @@ If a command already uses a splat, it MUST be passed unchanged to Invoke-MWEComm
 
 Invoke-MWECommand and Invoke-NWEWithLazyObject MUST NOT be wrapped (they are the logging/observability primitives).
 
-Source: DEC-0007/13
+Source: DEC-0012/13
 
 ---
 
@@ -190,4 +190,4 @@ This includes adding new public functions or extending existing functions with n
 Patch version increments when no new public functions or functionality are introduced.
 Patch releases are limited to internal refactoring, bug fixes, documentation updates, or test changes that do not alter public behavior.
 
-Source: DEC-0007/14
+Source: DEC-0012/14

@@ -6,7 +6,7 @@ Conditional Access MUST NOT be used to implement, replace, or duplicate
 - Authorization is handled exclusively via **roles, groups, and permissions**.
 - CA evaluates only whether the access attempt is **sufficiently secure**, not whether it is **permitted**.
 
-Source: DEC-0009/1
+Source: DEC-0014/1
 
 ---
 
@@ -17,7 +17,7 @@ Multi-Factor Authentication (MFA) is treated as a **condition** within the CA mo
 - MFA policy defines **which authentication methods satisfy that assurance**
 - CA policy enforces this in combination with other security inputs
 
-Source: DEC-0009/2
+Source: DEC-0014/2
 
 ---
 
@@ -42,7 +42,7 @@ Additional restrictions are permitted a
 These strictness controls are **intended to be implementable later**, but are **not
 implemented in this lab at this time**.
 
-Source: DEC-0009/3
+Source: DEC-0014/3
 
 ---
 
@@ -53,7 +53,7 @@ security requirements.
 - Unknown = **untrusted**
 - A lack of information cannot reduce assurance
 
-Source: DEC-0009/4
+Source: DEC-0014/4
 
 ---
 
@@ -96,7 +96,7 @@ even if compromise signals produce false positives.
 High-confidence compromise events MUST generate operational visibility (logging,
 alerting, investigation trigger).
 
-Source: DEC-0009/5
+Source: DEC-0014/5
 
 ---
 
@@ -106,7 +106,7 @@ combined with other risk signals. Location is never used:
 - as a standalone trust signal
 - to relax security requirements
 
-Source: DEC-0009/6
+Source: DEC-0014/6
 
 ---
 
@@ -116,7 +116,7 @@ Conditional Access is treated as a **sign-in gate**:
 - Decisions are made at authentication time
 - Session-level and continuous enforcement are out of scope for this model
 
-Source: DEC-0009/7
+Source: DEC-0014/7
 
 ---
 
@@ -125,7 +125,7 @@ Source: DEC-0009/7
 The CA model applies a **global, application-agnostic baseline**.
 Application-specific strictness is allowed only as an explicit, justified exception.
 
-Source: DEC-0009/8
+Source: DEC-0014/8
 
 ---
 
@@ -133,7 +133,7 @@ Source: DEC-0009/8
 Authentication methods/protocols that cannot satisfy the baseline security posture
 are considered **incompatible by default**.
 
-Source: DEC-0009/9
+Source: DEC-0014/9
 
 ---
 
@@ -147,7 +147,7 @@ including at minimum:
 This decision does not prescribe tooling; it defines the expectation that such
 events are observable and reviewable.
 
-Source: DEC-0009/10
+Source: DEC-0014/10
 
 ---
 
@@ -160,7 +160,7 @@ However, the **detailed CA model and implementation** for automation identities 
 explicitly out of scope for this lab.
 
 
-Source: DEC-0009/11
+Source: DEC-0014/11
 
 ---
 
@@ -171,4 +171,4 @@ Exceptions to the CA model are permitted only with:
 - defined expiration
 - regular review
 
-Source: DEC-0009/12
+Source: DEC-0014/12

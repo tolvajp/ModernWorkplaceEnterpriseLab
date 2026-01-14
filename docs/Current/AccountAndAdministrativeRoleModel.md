@@ -8,6 +8,6 @@ The tenant will use a **strictly separated account model** consisting of:
 Administrative privileges will **never** be exercised using standard user accounts.
 Each account type has a distinct purpose, risk profile, and security treatment.
 
-Source: DEC-0002/1
+Source: DEC-0004/1
 
 ---

@@ -13,7 +13,7 @@ Where:
 
 At least one `Specifier` token is mandatory.
 
-Source: DEC-0004/1
+Source: DEC-0007/1
 
 ---
 
@@ -28,7 +28,7 @@ Only the following characters are allowed in group names:
 
 Any other character is invalid.
 
-source: DEC-0004/2
+source: DEC-0007/2
 
 ---
 
@@ -36,7 +36,7 @@ source: DEC-0004/2
 Whitespace and any character outside the allowed set (A–Z a–z 0–9 - _) are automatically removed
 during group name generation.
 
-Source: DEC-0004/3
+Source: DEC-0007/3
 
 ---
 
@@ -44,7 +44,7 @@ Source: DEC-0004/3
 The `mailNickname` property is set to exactly the same value as the normalized group name.
 It should not be longer than 64 character
 
-Source: DEC-0004/4
+Source: DEC-0007/4
 
 ----
 
@@ -53,7 +53,7 @@ Every managed group must have a non-empty, human-readable description that clear
 the group’s intended purpose.
 
 
-Source: DEC-0004/5
+Source: DEC-0007/5
 
 ---
 
@@ -61,7 +61,7 @@ Source: DEC-0004/5
 All managed groups are created exclusively by automation scripts.
 Manual creation of managed groups is not permitted.
 
-Source: DEC-0004/6
+Source: DEC-0007/6
 
 ---
 
@@ -69,4 +69,4 @@ Source: DEC-0004/6
 The group creation logic must be modular so that new group functions or rules
 can be added with minimal refactoring existing behaviour.
 
-Source: DEC-0004/7
+Source: DEC-0007/7
