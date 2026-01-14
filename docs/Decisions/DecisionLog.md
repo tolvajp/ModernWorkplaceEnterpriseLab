@@ -26,10 +26,10 @@ The decision folders are the **source of truth**.
 | DEC-0007 | Define group taxonomy and naming rules | Accepted | 2025-12-28 | Peter Tolvaj | |
 | DEC-0008 | Define license distribution model using group-based licensing | Accepted | 2025-12-29 | Peter Tolvaj | |
 | DEC-0010 | Group-based Privileged Identity Management (PIM) for Entra ID Roles | Accepted | 2025-12-29 | Peter Tolvaj | |
-| DEC-0012 | Module refactoring  | Accepted | 2025-01-09 | Peter Tolvaj | |
-| DEC-0013 | Authentication Baseline: MFA Model  | Accepted | 2025-01-10 | Peter Tolvaj | |
-| DEC-0014 | Conditional Access Model  | Accepted | 2025-01-10 | Peter Tolvaj | |
-| DEC-0015 | Human User Account Lifecycle Model  | Accepted | 2025-01-14 | Peter Tolvaj | |
+| DEC-0012 | Module refactoring  | Accepted | 2026-01-09 | Peter Tolvaj | |
+| DEC-0013 | Authentication Baseline: MFA Model  | Accepted | 2026-01-10 | Peter Tolvaj | |
+| DEC-0014 | Conditional Access Model  | Accepted | 2026-01-10 | Peter Tolvaj | |
+| DEC-0015 | Human User Account Lifecycle Model  | Accepted | 2026-01-14 | Peter Tolvaj | |
 | DEC-0004 | Account and administrative role model | Revoked | 2026-01-14 | Peter Tolvaj | Early stage decision, suspended by DEC-0015 | 
 ---
 
